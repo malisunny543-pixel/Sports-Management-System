@@ -21,6 +21,7 @@ env/
 .env
 .env.*
 *.env
+!.env.example
 
 # -----------------------------------------
 # Python Bytecode & Cache
@@ -59,6 +60,7 @@ flask_session/
 #   OR add an explicit exception here:
 #       !database/ca.pem
 *.pem
+!database/ca.pem
 
 # -----------------------------------------
 # IDE & Editor Files
