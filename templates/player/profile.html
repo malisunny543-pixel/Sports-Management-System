@@ -1,0 +1,177 @@
+{% extends "layout/base.html" %}
+
+{% block title %}My Profile & Account — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('player_dashboard') }}">Player Portal</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>My Profile</span>
+    </div>
+
+    <!-- Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">My Profile &amp; Account</h1>
+            <p class="module-subtitle">Manage your personal information and view athletic registration details</p>
+        </div>
+        <div>
+            <a href="{{ url_for('player_dashboard') }}" class="btn btn-outline" id="btn-back-dashboard">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-2xl);">
+        <!-- Athletic Registration Status Card (Read-Only) -->
+        <div class="player-profile-card">
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-sm); display: flex; justify-content: space-between; align-items: center;">
+                <span>🏅 Athletic Registration</span>
+                <span class="readonly-pill">🔒 Admin Managed</span>
+            </h2>
+
+            {% if player %}
+                <div class="player-info-grid">
+                    <div class="player-info-item">
+                        <span class="player-info-label">Sport Discipline</span>
+                        <span class="player-info-value">
+                            <span class="badge-sport">
+                                <span>🏅</span>
+                                <span>{{ player.sport_name }}</span>
+                            </span>
+                        </span>
+                    </div>
+
+                    <div class="player-info-item">
+                        <span class="player-info-label">Assigned Team</span>
+                        <span class="player-info-value" style="color: var(--color-accent-primary);">
+                            🛡️ {{ player.team_name or 'Unassigned (Free Agent)' }}
+                        </span>
+                    </div>
+
+                    <div class="player-info-item">
+                        <span class="player-info-label">Jersey Number</span>
+                        <span class="player-info-value" style="font-family: var(--font-mono); font-size: 1.2rem;">
+                            {{ '#' ~ player.jersey_number if player.jersey_number else 'Not Assigned' }}
+                        </span>
+                    </div>
+
+                    <div class="player-info-item">
+                        <span class="player-info-label">Profile Created</span>
+                        <span class="player-info-value" style="font-size: 0.88rem; color: var(--color-text-muted);">
+                            {{ player.created_at }}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="margin-top: var(--space-xl); padding: var(--space-md); background: rgba(0, 180, 216, 0.08); border: 1px solid rgba(72, 202, 228, 0.25); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--color-text-secondary);">
+                    ℹ️ <strong>Roster Note:</strong> Sport discipline, team assignments, and official jersey numbers are governed by organization administrators and cannot be altered via self-service.
+                </div>
+            {% else %}
+                <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                    <div class="empty-state-icon">⚠️</div>
+                    <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        No Athletic Profile Linked
+                    </h3>
+                    <p style="color: var(--color-text-muted); font-size: 0.88rem; margin: 0;">
+                        Your login account is active, but an administrator has not yet associated this user account with a registered athletic player record.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Personal Details Form (Self-Service) -->
+        <div class="player-profile-card">
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-sm);">
+                ✏️ Personal Details (Self-Service)
+            </h2>
+
+            <form method="POST" action="{{ url_for('player_profile') }}" id="player-profile-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                {% if player %}
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Full Name <span style="color: var(--color-accent-orange);">*</span></label>
+                    <input 
+                        type="text" 
+                        id="full_name" 
+                        name="full_name" 
+                        class="form-input" 
+                        value="{{ player.full_name }}" 
+                        maxlength="150" 
+                        required
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Email Address -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address <span style="color: var(--color-accent-orange);">*</span></label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        value="{{ user.email }}" 
+                        maxlength="100" 
+                        required
+                    >
+                    <span style="font-size: 0.78rem; color: var(--color-text-muted); display: block; margin-top: 0.25rem;">
+                        Used for system notifications and account authentication.
+                    </span>
+                </div>
+
+                {% if player %}
+                <!-- Date of Birth -->
+                <div class="form-group">
+                    <label for="date_of_birth" class="form-label">Date of Birth</label>
+                    <input 
+                        type="date" 
+                        id="date_of_birth" 
+                        name="date_of_birth" 
+                        class="form-input" 
+                        value="{{ player.date_of_birth or '' }}"
+                    >
+                </div>
+
+                <!-- Gender -->
+                <div class="form-group">
+                    <label for="gender" class="form-label">Gender</label>
+                    <select id="gender" name="gender" class="form-input">
+                        <option value="">Not Specified</option>
+                        <option value="male" {% if player.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if player.gender == 'female' %}selected{% endif %}>Female</option>
+                        <option value="other" {% if player.gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Read-only Account Properties -->
+                <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-md); margin-bottom: var(--space-lg); font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span style="color: var(--color-text-muted);">Username:</span>
+                        <strong style="color: var(--color-text-primary);">{{ user.username }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--color-text-muted);">Account Role:</span>
+                        <strong style="color: var(--color-accent-primary);">{{ user.role }}</strong>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div style="display: flex; gap: var(--space-sm); justify-content: flex-end;">
+                    <a href="{{ url_for('player_dashboard') }}" class="btn btn-outline" id="btn-cancel-profile">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="btn-save-profile">
+                        Save Profile Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,300 @@
+{% extends "layout/base.html" %}
+
+{% block title %}User Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>User Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <span class="status-badge-active" style="margin-bottom: var(--space-xs);">
+                ● Administration
+            </span>
+            <h1 class="module-title">User Management</h1>
+            <p class="module-subtitle">
+                Inspect registered user accounts, configure administrative privileges, and manage account activation status
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('user_create') }}" class="btn btn-primary" id="btn-create-user">
+                <span>+</span>
+                <span>Create New User</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl);">
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Total Accounts
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-text-primary); font-family: var(--font-mono);" id="metric-total-users">
+                {{ summary.total_users or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Active Users
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent-primary); font-family: var(--font-mono);" id="metric-active-users">
+                {{ summary.active_users or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Deactivated
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #ff6b6b; font-family: var(--font-mono);" id="metric-inactive-users">
+                {{ summary.inactive_users or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Administrators
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #a594fd; font-family: var(--font-mono);" id="metric-admin-users">
+                {{ summary.admin_users or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Players
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #48cae4; font-family: var(--font-mono);" id="metric-player-users">
+                {{ summary.player_users or 0 }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Search & Filters Bar -->
+    <div class="controls-bar" style="margin-bottom: var(--space-lg);">
+        <form method="GET" action="{{ url_for('users_list') }}" style="display: flex; gap: var(--space-md); flex-wrap: wrap; width: 100%; align-items: center;" id="users-filter-form">
+            <div class="search-box" style="flex: 1; min-width: 240px;">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    name="search" 
+                    id="users-search-input" 
+                    class="search-input" 
+                    placeholder="Search by username or email..." 
+                    value="{{ search_query }}"
+                    aria-label="Search users"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+                <div>
+                    <select name="role" id="filter-role-select" class="filter-select" aria-label="Filter by role">
+                        <option value="">All Roles</option>
+                        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrator</option>
+                        <option value="player" {% if role_filter == 'player' %}selected{% endif %}>Player</option>
+                    </select>
+                </div>
+
+                <div>
+                    <select name="status" id="filter-status-select" class="filter-select" aria-label="Filter by status">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Deactivated</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm" id="btn-filter-users">
+                    <span>Apply</span>
+                </button>
+
+                {% if search_query or role_filter or status_filter %}
+                    <a href="{{ url_for('users_list') }}" class="btn btn-outline btn-sm" id="btn-clear-filters">
+                        <span>Clear</span>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="table-card">
+        {% if users and users|length > 0 %}
+            <div class="table-responsive">
+                <table class="data-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Username</th>
+                            <th>Email Address</th>
+                            <th style="width: 120px;">Role</th>
+                            <th style="width: 180px;">Linked Profile</th>
+                            <th style="width: 130px;">Status</th>
+                            <th style="width: 150px;">Created</th>
+                            <th style="text-align: right; width: 220px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                            <tr id="user-row-{{ u.id }}">
+                                <td style="font-family: var(--font-mono); color: var(--color-text-muted); font-size: 0.85rem;">
+                                    #{{ u.id }}
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                                        <strong style="color: var(--color-text-primary);">{{ u.username }}</strong>
+                                        {% if u.id == g.current_user.id %}
+                                            <span class="badge-pill" style="font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(0, 212, 170, 0.15); color: var(--color-accent-primary); border: 1px solid rgba(0, 212, 170, 0.3);">
+                                                You
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <code style="color: var(--color-text-secondary); font-size: 0.88rem;">{{ u.email }}</code>
+                                </td>
+                                <td>
+                                    {% if u.role == 'admin' %}
+                                        <span class="badge-role-admin" id="user-role-badge-{{ u.id }}">
+                                            <span>⚙️</span>
+                                            <span>admin</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-role-player" id="user-role-badge-{{ u.id }}">
+                                            <span>🏃</span>
+                                            <span>player</span>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.player_name %}
+                                        <span class="badge-account" title="Linked to player ID {{ u.player_id }}">
+                                            <span>👤</span>
+                                            <span>{{ u.player_name }}</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-account-none" style="font-style: italic;">
+                                            Unlinked
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.is_active == 1 %}
+                                        <span class="badge-status-active" id="user-status-badge-{{ u.id }}">
+                                            <span>●</span>
+                                            <span>Active</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-status-inactive" id="user-status-badge-{{ u.id }}">
+                                            <span>●</span>
+                                            <span>Deactivated</span>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 0.85rem; color: var(--color-text-muted); white-space: nowrap;">
+                                    {{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else '—' }}
+                                </td>
+                                <td style="text-align: right;">
+                                    <div style="display: inline-flex; gap: var(--space-xs); align-items: center; justify-content: flex-end;">
+                                        <!-- Status Toggle Form -->
+                                        {% if u.id == g.current_user.id %}
+                                            <span class="btn-disabled-pill" title="You cannot deactivate your own account">
+                                                Self
+                                            </span>
+                                        {% else %}
+                                            <form method="POST" action="{{ url_for('user_toggle_status', user_id=u.id) }}" data-confirm="Are you sure you want to {% if u.is_active == 1 %}deactivate{% else %}activate{% endif %} this user account?" style="margin: 0; display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                {% if u.is_active == 1 %}
+                                                    <input type="hidden" name="status" value="deactivate">
+                                                    <button 
+                                                        type="submit" 
+                                                        class="btn-warning-outline" 
+                                                        id="btn-toggle-status-{{ u.id }}"
+                                                        title="Deactivate this user account"
+                                                    >
+                                                        Deactivate
+                                                    </button>
+                                                {% else %}
+                                                    <input type="hidden" name="status" value="activate">
+                                                    <button 
+                                                        type="submit" 
+                                                        class="btn-success-outline" 
+                                                        id="btn-toggle-status-{{ u.id }}"
+                                                        title="Activate this user account"
+                                                    >
+                                                        Activate
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                        {% endif %}
+
+                                        <!-- Role Change Form -->
+                                        {% if u.id == g.current_user.id %}
+                                            <!-- Current admin cannot demote self -->
+                                            <span class="btn-disabled-pill" title="You cannot remove your own admin role">
+                                                Admin
+                                            </span>
+                                        {% elif u.role == 'admin' %}
+                                            <form method="POST" action="{{ url_for('user_change_role', user_id=u.id) }}" data-confirm="Are you sure you want to demote this user to Player role?" style="margin: 0; display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="role" value="player">
+                                                <button 
+                                                    type="submit" 
+                                                    class="btn btn-outline btn-sm" 
+                                                    id="btn-change-role-{{ u.id }}"
+                                                    title="Demote to Player role"
+                                                >
+                                                    To Player
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <!-- Player role: can promote to admin if not linked to player profile -->
+                                            <form method="POST" action="{{ url_for('user_change_role', user_id=u.id) }}" data-confirm="Are you sure you want to promote this user to Admin role?" style="margin: 0; display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="role" value="admin">
+                                                <button 
+                                                    type="submit" 
+                                                    class="btn btn-outline btn-sm" 
+                                                    id="btn-change-role-{{ u.id }}"
+                                                    title="{% if u.player_name %}User is linked to player '{{ u.player_name }}' — must be unlinked first{% else %}Promote to Admin role{% endif %}"
+                                                >
+                                                    To Admin
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding: var(--space-2xl) var(--space-md);">
+                <div class="empty-state-icon" style="font-size: 2.5rem;">👥</div>
+                <h3 class="empty-state-title">No Users Found</h3>
+                <p class="empty-state-desc">
+                    {% if search_query or role_filter or status_filter %}
+                        No user accounts match the specified search query or filter criteria.
+                    {% else %}
+                        No user accounts are registered in the system.
+                    {% endif %}
+                </p>
+                {% if search_query or role_filter or status_filter %}
+                    <a href="{{ url_for('users_list') }}" class="btn btn-outline btn-sm" id="btn-reset-empty-search">
+                        Clear Search &amp; Filters
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('user_create') }}" class="btn btn-primary btn-sm" id="btn-create-first-user">
+                        Create User Account
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Admin Dashboard — Sports Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+            <div>
+                <span class="status-badge-active" style="margin-bottom: var(--space-xs);">
+                    ● Administrator Console
+                </span>
+                <h1 class="dashboard-title">
+                    Welcome, {{ g.current_user.username }}
+                </h1>
+                <p style="color: var(--color-text-secondary); font-size: 0.95rem;">
+                    Account Email: <code>{{ g.current_user.email }}</code> &bull; Role: <strong>{{ g.current_user.role }}</strong>
+                </p>
+            </div>
+            <div>
+                <form method="POST" action="{{ url_for('logout') }}" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger-outline" id="btn-admin-logout">
+                        Sign Out
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 5 Module Preview Cards -->
+    <div class="dashboard-grid">
+        <div class="dashboard-card" id="card-users" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="dashboard-card-title">
+                    <span>👥</span>
+                    <span>User Management</span>
+                </div>
+                <p class="dashboard-card-desc">
+                    Manage system users, player profiles, roles, and account activation status.
+                </p>
+            </div>
+            <div style="margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border);">
+                <a href="{{ url_for('users_list') }}" class="btn btn-outline btn-sm" id="btn-manage-users" style="width: 100%; text-align: center;">
+                    <span>Manage Users &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="card-sports" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="dashboard-card-title">
+                    <span>🏅</span>
+                    <span>Sports & Categories</span>
+                </div>
+                <p class="dashboard-card-desc">
+                    Configure sports, categories, and event classifications.
+                </p>
+            </div>
+            <div style="margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border);">
+                <a href="{{ url_for('sports_list') }}" class="btn btn-outline btn-sm" id="btn-manage-sports" style="width: 100%;">
+                    <span>Manage Sports &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="card-teams" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="dashboard-card-title">
+                    <span>🛡️</span>
+                    <span>Teams & Rosters</span>
+                </div>
+                <p class="dashboard-card-desc">
+                    Manage team organizations, sporting affiliations, and roster assignments.
+                </p>
+            </div>
+            <div style="margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); display: flex; gap: var(--space-sm);">
+                <a href="{{ url_for('teams_list') }}" class="btn btn-outline btn-sm" id="btn-manage-teams" style="flex: 1; text-align: center;">
+                    <span>Manage Teams &rarr;</span>
+                </a>
+                <a href="{{ url_for('players_list') }}" class="btn btn-outline btn-sm" id="btn-manage-players" style="flex: 1; text-align: center;">
+                    <span>Manage Players &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="card-tournaments" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="dashboard-card-title">
+                    <span>🏆</span>
+                    <span>Tournaments & Matches</span>
+                </div>
+                <p class="dashboard-card-desc">
+                    Schedule matches, record official results, and view standings.
+                </p>
+            </div>
+            <div style="margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+                <a href="{{ url_for('tournaments_list') }}" class="btn btn-outline btn-sm" id="btn-manage-tournaments" style="flex: 1; min-width: 110px; text-align: center;">
+                    <span>Tournaments &rarr;</span>
+                </a>
+                <a href="{{ url_for('matches_list') }}" class="btn btn-outline btn-sm" id="btn-manage-matches" style="flex: 1; min-width: 110px; text-align: center;">
+                    <span>Matches &rarr;</span>
+                </a>
+                <a href="{{ url_for('results_list') }}" class="btn btn-outline btn-sm" id="btn-manage-results" style="flex: 1; min-width: 110px; text-align: center;">
+                    <span>Results &rarr;</span>
+                </a>
+                <a href="{{ url_for('standings_redirect') }}" class="btn btn-outline btn-sm" id="btn-manage-standings" style="flex: 1; min-width: 110px; text-align: center;">
+                    <span>Standings &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-card" id="card-reports" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="dashboard-card-title">
+                    <span>📈</span>
+                    <span>Reports &amp; Analytics</span>
+                </div>
+                <p class="dashboard-card-desc">
+                    System-wide activity metrics, tournament reports, team analytics, player performance summaries, and CSV data exports.
+                </p>
+            </div>
+            <div style="margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border);">
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-outline btn-sm" id="btn-view-reports" style="width: 100%; text-align: center;">
+                    <span>View Reports &rarr;</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

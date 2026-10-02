@@ -1,0 +1,537 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Reports &amp; Analytics — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Reports &amp; Analytics</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header" style="margin-bottom: var(--space-xl);">
+        <div>
+            <span class="status-badge-active" style="margin-bottom: var(--space-xs);">
+                ● Reporting &amp; Intelligence
+            </span>
+            <h1 class="module-title">Reports &amp; Analytics</h1>
+            <p class="module-subtitle">
+                System activity summaries, tournament match analytics, team roster breakdowns, and CSV data exports
+            </p>
+        </div>
+        <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+            <a href="{{ url_for('reports_export_players') }}" class="btn btn-outline btn-sm" id="btn-export-all-players" title="Export player stats to CSV">
+                <span>📊</span>
+                <span>Export Player Stats</span>
+            </a>
+            <a href="{{ url_for('reports_export_teams') }}" class="btn btn-outline btn-sm" id="btn-export-all-teams" title="Export team summaries to CSV">
+                <span>🛡️</span>
+                <span>Export Teams CSV</span>
+            </a>
+            <a href="{{ url_for('reports_export_matches') }}" class="btn btn-outline btn-sm" id="btn-export-all-matches" title="Export all matches to CSV">
+                <span>🏆</span>
+                <span>Export All Matches</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. System Overview Metrics Grid -->
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-md);">
+        System Overview &amp; Key Metrics
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-2xl);">
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Sports Categories
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-text-primary); font-family: var(--font-mono);" id="metric-total-sports">
+                {{ summary.total_sports or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Teams Registered
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-text-primary); font-family: var(--font-mono);" id="metric-total-teams">
+                {{ summary.total_teams or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Players Registered
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-text-primary); font-family: var(--font-mono);" id="metric-total-players">
+                {{ summary.total_players or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Tournaments
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #a594fd; font-family: var(--font-mono);" id="metric-total-tournaments">
+                {{ summary.total_tournaments or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Total Matches
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent-primary); font-family: var(--font-mono);" id="metric-total-matches">
+                {{ summary.total_matches or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Completed Matches
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #00d4aa; font-family: var(--font-mono);" id="metric-completed-matches">
+                {{ summary.completed_matches or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Upcoming Matches
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #48cae4; font-family: var(--font-mono);" id="metric-upcoming-matches">
+                {{ summary.upcoming_matches or 0 }}
+            </span>
+        </div>
+        <div class="table-card" style="padding: var(--space-md) var(--space-lg); text-align: center;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-muted); display: block; margin-bottom: 0.25rem;">
+                Matches Without Results
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 800; color: #ffaa00; font-family: var(--font-mono);" id="metric-unrecorded-matches">
+                {{ summary.matches_without_results or 0 }}
+            </span>
+        </div>
+    </div>
+
+    <!-- 2. Tournament Report Selector -->
+    <div class="table-card" style="padding: var(--space-lg); margin-bottom: var(--space-2xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 0.2rem 0;">
+                    🏆 Tournament Performance Reports
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;">
+                    Select a tournament to inspect its standings, scheduled fixtures, recorded results, and top individual performers
+                </p>
+            </div>
+            <form method="GET" action="{{ url_for('admin_reports') }}" id="tournament-report-form" style="margin: 0; display: flex; gap: var(--space-sm); align-items: center;">
+                <select name="tournament_id" id="tournament-select" class="filter-select" aria-label="Select tournament" style="min-width: 250px;">
+                    <option value="">-- Choose a Tournament --</option>
+                    {% for t in all_tournaments %}
+                        <option value="{{ t.id }}" {% if selected_tournament and selected_tournament.id == t.id %}selected{% endif %}>
+                            {{ t.name }} ({{ t.sport_name }} &bull; {{ t.status }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm" id="btn-load-tournament-report">
+                    Load Report
+                </button>
+            </form>
+        </div>
+
+        {% if selected_tournament %}
+            <!-- Selected Tournament Details Banner -->
+            <div style="margin-top: var(--space-lg); padding-top: var(--space-md); border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
+                <div>
+                    <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: 0.25rem;">
+                        <span class="badge-sport">
+                            <span>🏅</span>
+                            <span>{{ selected_tournament.sport_name }}</span>
+                        </span>
+                        <span class="badge-status badge-status-{{ selected_tournament.status }}">
+                            {{ selected_tournament.status }}
+                        </span>
+                    </div>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--color-text-primary); margin: 0 0 0.2rem 0;">
+                        {{ selected_tournament.name }}
+                    </h3>
+                    <p style="color: var(--color-text-muted); font-size: 0.85rem; margin: 0;">
+                        <span>📅 {{ selected_tournament.start_date }} &rarr; {{ selected_tournament.end_date }}</span>
+                        {% if selected_tournament.description %}
+                            &bull; <span>{{ selected_tournament.description }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('reports_export_standings', tournament_id=selected_tournament.id) }}" class="btn btn-outline btn-sm" id="btn-export-standings-csv">
+                        <span>📥</span>
+                        <span>Export Standings CSV</span>
+                    </a>
+                    <a href="{{ url_for('reports_export_matches', tournament_id=selected_tournament.id) }}" class="btn btn-outline btn-sm" id="btn-export-tournament-matches-csv">
+                        <span>📥</span>
+                        <span>Export Matches CSV</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Standings Table -->
+            <div style="margin-top: var(--space-xl);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        Tournament Standings &amp; Rankings
+                    </h4>
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+                        Rule: <strong>{{ scoring_info.system_name }}</strong>
+                    </span>
+                </div>
+
+                {% if standings and standings|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="data-table" id="tournament-standings-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Rank</th>
+                                    <th>Team</th>
+                                    <th style="text-align: center; width: 60px;">P</th>
+                                    <th style="text-align: center; width: 60px;">W</th>
+                                    <th style="text-align: center; width: 60px;">D</th>
+                                    <th style="text-align: center; width: 60px;">L</th>
+                                    <th style="text-align: center; width: 70px;">{{ scoring_info.metric_for }}</th>
+                                    <th style="text-align: center; width: 70px;">{{ scoring_info.metric_against }}</th>
+                                    <th style="text-align: center; width: 70px;">{{ scoring_info.metric_diff }}</th>
+                                    <th style="text-align: center; width: 80px;">Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in standings %}
+                                    <tr id="standings-row-{{ team.team_id }}">
+                                        <td>
+                                            {% if loop.index == 1 %}
+                                                <span class="badge-rank badge-rank-1">🥇 1</span>
+                                            {% elif loop.index == 2 %}
+                                                <span class="badge-rank badge-rank-2">🥈 2</span>
+                                            {% elif loop.index == 3 %}
+                                                <span class="badge-rank badge-rank-3">🥉 3</span>
+                                            {% else %}
+                                                <span class="badge-rank badge-rank-other">{{ loop.index }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong style="color: var(--color-text-primary);">{{ team.team_name }}</strong>
+                                        </td>
+                                        <td style="text-align: center; font-weight: 600;">{{ team.played }}</td>
+                                        <td style="text-align: center; color: var(--color-accent-primary); font-weight: 600;">{{ team.wins }}</td>
+                                        <td style="text-align: center; color: #ffaa00; font-weight: 600;">{{ team.draws }}</td>
+                                        <td style="text-align: center; color: #ff6b6b; font-weight: 600;">{{ team.losses }}</td>
+                                        <td style="text-align: center;">{{ team.score_for }}</td>
+                                        <td style="text-align: center;">{{ team.score_against }}</td>
+                                        <td style="text-align: center; font-weight: 600; color: {% if team.score_diff > 0 %}#00d4aa{% elif team.score_diff < 0 %}#ff6b6b{% else %}var(--color-text-muted){% endif %};">
+                                            {% if team.score_diff > 0 %}+{% endif %}{{ team.score_diff }}
+                                        </td>
+                                        <td style="text-align: center;">
+                                            {% if scoring_info.has_points_rule %}
+                                                <span class="badge-pts" id="standings-pts-{{ team.team_id }}">{{ team.points }}</span>
+                                            {% else %}
+                                                <span style="color: var(--color-text-muted); font-size: 0.85rem;">—</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state" style="padding: var(--space-lg);">
+                        <div class="empty-state-icon" style="font-size: 2rem;">🏆</div>
+                        <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                            No completed match results have been recorded for this tournament yet. Standings will populate as results are entered.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tournament Fixtures & Completed Match Results -->
+            <div style="margin-top: var(--space-xl);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        Match Schedule &amp; Results Breakdown
+                    </h4>
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+                        Total Matches: <strong>{{ tournament_matches|length }}</strong>
+                    </span>
+                </div>
+
+                {% if tournament_matches and tournament_matches|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="data-table" id="tournament-matches-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">ID</th>
+                                    <th>Matchup</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Venue</th>
+                                    <th style="width: 120px;">Status</th>
+                                    <th style="text-align: center; width: 110px;">Score</th>
+                                    <th>Outcome / Winner</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in tournament_matches %}
+                                    <tr id="match-row-{{ m.id }}">
+                                        <td style="font-family: var(--font-mono); color: var(--color-text-muted); font-size: 0.85rem;">
+                                            #{{ m.id }}
+                                        </td>
+                                        <td>
+                                            <div class="matchup-teams" style="font-size: 0.88rem;">
+                                                <span style="font-weight: 600; color: var(--color-text-primary);">{{ m.team1_name }}</span>
+                                                <span class="vs-pill">vs</span>
+                                                <span style="font-weight: 600; color: var(--color-text-primary);">{{ m.team2_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td style="font-size: 0.85rem; color: var(--color-text-secondary); white-space: nowrap;">
+                                            {{ m.match_datetime }}
+                                        </td>
+                                        <td style="font-size: 0.85rem; color: var(--color-text-muted);">
+                                            {{ m.venue }}
+                                        </td>
+                                        <td>
+                                            <span class="badge-status badge-status-{{ m.status }}">
+                                                {{ m.status }}
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            {% if m.result_id %}
+                                                <span class="badge-score-pill">
+                                                    {{ m.team1_score }} &ndash; {{ m.team2_score }}
+                                                </span>
+                                            {% elif m.status == 'completed' %}
+                                                <span class="badge-status badge-status-cancelled" style="font-size: 0.72rem; padding: 0.15rem 0.45rem;">
+                                                    Result Pending
+                                                </span>
+                                            {% else %}
+                                                <span style="color: var(--color-text-muted); font-size: 0.85rem;">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if m.result_id %}
+                                                {% if m.winner_name %}
+                                                    <span style="color: var(--color-accent-primary); font-weight: 600; font-size: 0.85rem;">
+                                                        Winner: {{ m.winner_name }}
+                                                    </span>
+                                                {% else %}
+                                                    <span style="color: #ffaa00; font-weight: 600; font-size: 0.85rem;">
+                                                        Draw
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span style="color: var(--color-text-muted); font-size: 0.82rem; font-style: italic;">
+                                                    No result recorded
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state" style="padding: var(--space-lg);">
+                        <div class="empty-state-icon" style="font-size: 2rem;">📅</div>
+                        <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                            No matches have been scheduled for this tournament yet.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Participating Teams in this Tournament -->
+            <div style="margin-top: var(--space-xl);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        Participating Teams
+                    </h4>
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+                        Count: <strong>{{ participating_teams|length }}</strong>
+                    </span>
+                </div>
+
+                {% if participating_teams and participating_teams|length > 0 %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md);">
+                        {% for team in participating_teams %}
+                            <div class="table-card" style="padding: var(--space-md); border-left: 3px solid var(--color-accent-primary);">
+                                <h5 style="margin: 0 0 0.2rem 0; font-size: 0.95rem; color: var(--color-text-primary);">
+                                    {{ team.name }}
+                                </h5>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--color-text-secondary);">
+                                    <span>👥 {{ team.player_count }} Player{% if team.player_count != 1 %}s{% endif %}</span>
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--color-text-muted); font-size: 0.88rem; font-style: italic; margin: 0;">
+                        No teams are currently scheduled in matches for this tournament.
+                    </p>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <!-- Prompt when no tournament selected -->
+            <div class="empty-state" style="padding: var(--space-2xl) var(--space-md);">
+                <div class="empty-state-icon" style="font-size: 2.5rem;">🏆</div>
+                <h3 class="empty-state-title">Select a Tournament</h3>
+                <p class="empty-state-desc">
+                    Choose any registered tournament from the dropdown above to view standings, fixtures, match outcomes, and team analytics.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 3. Overall Player Performance Leaderboard -->
+    <div class="table-card" style="margin-bottom: var(--space-2xl);">
+        <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-sm);">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                    ⭐ Overall Player Performance Summary
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0.2rem 0 0 0;">
+                    Top athletic statistics aggregated across all recorded match appearances
+                </p>
+            </div>
+            <a href="{{ url_for('reports_export_players') }}" class="btn btn-outline btn-sm" id="btn-export-players-table">
+                <span>📥</span>
+                <span>Export Player Stats CSV</span>
+            </a>
+        </div>
+
+        {% if top_players and top_players|length > 0 %}
+            <div class="table-responsive">
+                <table class="data-table" id="top-players-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Player Name</th>
+                            <th>Sport</th>
+                            <th>Current Team</th>
+                            <th style="text-align: center; width: 100px;">Matches Played</th>
+                            <th style="text-align: center; width: 90px;">Goals</th>
+                            <th style="text-align: center; width: 90px;">Assists</th>
+                            <th style="text-align: center; width: 90px;">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in top_players %}
+                            <tr id="player-stat-row-{{ p.id }}">
+                                <td style="font-family: var(--font-mono); color: var(--color-text-muted); font-size: 0.85rem;">
+                                    #{{ p.id }}
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                                        <strong style="color: var(--color-text-primary);">{{ p.full_name }}</strong>
+                                        {% if p.jersey_number %}
+                                            <span class="jersey-pill">#{{ p.jersey_number }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge-sport">
+                                        <span>🏅</span>
+                                        <span>{{ p.sport_name }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if p.team_name %}
+                                        <span class="badge-team">{{ p.team_name }}</span>
+                                    {% else %}
+                                        <span class="badge-unassigned">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center; font-weight: 600;">
+                                    {{ p.matches_played }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #00d4aa;">
+                                    {{ p.total_goals }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #6c63ff;">
+                                    {{ p.total_assists }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #ffaa00;">
+                                    {{ p.total_points }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                <div class="empty-state-icon" style="font-size: 2rem;">📊</div>
+                <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                    No player match performance statistics have been recorded in the database yet.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 4. Team-Level Activity & Roster Summaries -->
+    <div class="table-card">
+        <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-sm);">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                    🛡️ Team Roster &amp; Activity Summaries
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0.2rem 0 0 0;">
+                    Current roster size and scheduled match activity across all registered teams
+                </p>
+            </div>
+            <a href="{{ url_for('reports_export_teams') }}" class="btn btn-outline btn-sm" id="btn-export-teams-table">
+                <span>📥</span>
+                <span>Export Teams CSV</span>
+            </a>
+        </div>
+
+        {% if team_summaries and team_summaries|length > 0 %}
+            <div class="table-responsive">
+                <table class="data-table" id="team-summaries-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Team Name</th>
+                            <th>Sport</th>
+                            <th style="text-align: center; width: 130px;">Active Roster</th>
+                            <th style="text-align: center; width: 140px;">Scheduled Matches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in team_summaries %}
+                            <tr id="team-summary-row-{{ team.id }}">
+                                <td style="font-family: var(--font-mono); color: var(--color-text-muted); font-size: 0.85rem;">
+                                    #{{ team.id }}
+                                </td>
+                                <td>
+                                    <strong style="color: var(--color-text-primary);">{{ team.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge-sport">
+                                        <span>🏅</span>
+                                        <span>{{ team.sport_name }}</span>
+                                    </span>
+                                </td>
+                                <td style="text-align: center; font-weight: 600; color: var(--color-accent-primary);">
+                                    {{ team.roster_count }}
+                                </td>
+                                <td style="text-align: center; font-weight: 600;">
+                                    {{ team.match_count }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                <div class="empty-state-icon" style="font-size: 2rem;">🛡️</div>
+                <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                    No teams are registered in the system yet.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

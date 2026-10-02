@@ -1,0 +1,30 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Server Error — 500 Error — SportsPro{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 520px; text-align: center;">
+    <div class="auth-card">
+        <div style="font-size: 3.5rem; margin-bottom: var(--space-sm);">⚠️</div>
+        <h1 class="auth-title" style="color: #ff6b6b;">500 Server Error</h1>
+        <p class="auth-subtitle" style="margin-bottom: var(--space-xl);">
+            An unexpected error occurred while processing your request. Please try again or return to your dashboard.
+        </p>
+
+        <div style="display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('index') }}" class="btn btn-outline" id="btn-500-home">
+                Return to Home
+            </a>
+            {% if g.current_user and g.current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary" id="btn-500-admin">
+                    Admin Dashboard
+                </a>
+            {% elif g.current_user and g.current_user.role == 'player' %}
+                <a href="{{ url_for('player_dashboard') }}" class="btn btn-primary" id="btn-500-player">
+                    Player Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

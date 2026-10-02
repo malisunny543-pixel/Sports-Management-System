@@ -1,0 +1,211 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+    {% if action == 'edit' %}Edit Player: {{ player.full_name }}{% else %}Add New Player{% endif %} — SportsPro
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 760px;">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('players_list') }}">Player Management</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>{% if action == 'edit' %}Edit Player{% else %}Add Player{% endif %}</span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="module-header" style="margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md);">
+            <div>
+                <h1 class="module-title" style="font-size: 1.6rem;">
+                    {% if action == 'edit' %}
+                        Edit Player: <span style="color: var(--color-accent-primary);">{{ player.full_name }}</span>
+                    {% else %}
+                        Register New Player
+                    {% endif %}
+                </h1>
+                <p class="module-subtitle">
+                    {% if action == 'edit' %}
+                        Update athlete personal profile, sporting discipline, and roster assignment.
+                    {% else %}
+                        Register an athlete profile into the platform and optionally assign to a team.
+                    {% endif %}
+                </p>
+            </div>
+            {% if action == 'edit' and player.id %}
+                <div>
+                    <span class="badge-pill">ID #{{ player.id }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <form 
+            method="POST" 
+            action="{% if action == 'edit' %}{{ url_for('players_edit', player_id=player.id) }}{% else %}{{ url_for('players_create') }}{% endif %}"
+            id="player-form"
+            novalidate
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="full_name" class="form-label">
+                    Full Name <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="full_name" 
+                    name="full_name" 
+                    class="form-input" 
+                    value="{{ full_name if full_name is defined else (player.full_name if player else '') }}" 
+                    maxlength="150" 
+                    placeholder="e.g. Cristiano Ronaldo, Stephen Curry, Virat Kohli"
+                    required
+                    autocomplete="off"
+                    autofocus
+                >
+                <div class="char-counter">
+                    <span>Required &bull; Max 150 characters</span>
+                </div>
+            </div>
+
+            <!-- Row 1: Sport & Team -->
+            <div class="form-row">
+                <!-- Sport Selection -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="player_sport_id" class="form-label">
+                        Sport Discipline <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                    </label>
+                    {% set cur_sport = selected_sport_id if selected_sport_id is defined else (player.sport_id if player else '') %}
+                    <select id="player_sport_id" name="sport_id" class="form-input" required>
+                        <option value="">-- Select Sport Discipline --</option>
+                        {% for sport in sports %}
+                            <option 
+                                value="{{ sport.id }}" 
+                                {% if cur_sport|string == sport.id|string %}selected{% endif %}
+                            >
+                                {{ sport.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Team Selection -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="player_team_id" class="form-label">
+                        Team Assignment <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                    </label>
+                    {% set cur_team = selected_team_id if selected_team_id is defined else (player.team_id if player and player.team_id else '') %}
+                    <select id="player_team_id" name="team_id" class="form-input">
+                        <option value="">-- Unassigned (No Team) --</option>
+                        {% for team in teams %}
+                            <option 
+                                value="{{ team.id }}" 
+                                data-sport-id="{{ team.sport_id }}"
+                                {% if cur_team|string == team.id|string %}selected{% endif %}
+                            >
+                                {{ team.name }} ({{ team.sport_name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 2: Date of Birth & Gender -->
+            <div class="form-row">
+                <!-- Date of Birth -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="date_of_birth" class="form-label">
+                        Date of Birth <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                    </label>
+                    {% set cur_dob = date_of_birth if date_of_birth is defined else (player.date_of_birth.strftime('%Y-%m-%d') if player and player.date_of_birth else '') %}
+                    <input 
+                        type="date" 
+                        id="date_of_birth" 
+                        name="date_of_birth" 
+                        class="form-input" 
+                        value="{{ cur_dob }}"
+                        max="{{ max_date }}"
+                    >
+                    <div class="char-counter">
+                        <span>Cannot be a future date</span>
+                    </div>
+                </div>
+
+                <!-- Gender -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="gender" class="form-label">
+                        Gender <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                    </label>
+                    {% set cur_gender = gender if gender is defined else (player.gender if player and player.gender else '') %}
+                    <select id="gender" name="gender" class="form-input">
+                        <option value="">-- Select Gender --</option>
+                        <option value="male" {% if cur_gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if cur_gender == 'female' %}selected{% endif %}>Female</option>
+                        <option value="other" {% if cur_gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Jersey Number & Account Linking -->
+            <div class="form-row">
+                <!-- Jersey Number -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="jersey_number" class="form-label">
+                        Jersey Number <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                    </label>
+                    {% set cur_jersey = jersey_number if jersey_number is defined else (player.jersey_number if player and player.jersey_number is not none else '') %}
+                    <input 
+                        type="number" 
+                        id="jersey_number" 
+                        name="jersey_number" 
+                        class="form-input" 
+                        value="{{ cur_jersey }}" 
+                        min="0" 
+                        max="255" 
+                        placeholder="e.g. 7, 10, 23"
+                    >
+                    <div class="char-counter">
+                        <span>Number between 0 and 255</span>
+                    </div>
+                </div>
+
+                <!-- Linked Account -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="user_id" class="form-label">
+                        Linked User Account <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                    </label>
+                    {% set cur_user = selected_user_id if selected_user_id is defined else (player.user_id if player and player.user_id else '') %}
+                    <select id="user_id" name="user_id" class="form-input">
+                        <option value="">-- None (No Linked Account) --</option>
+                        {% for user in available_users %}
+                            <option 
+                                value="{{ user.id }}" 
+                                {% if cur_user|string == user.id|string %}selected{% endif %}
+                            >
+                                @{{ user.username }} ({{ user.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="char-counter">
+                        <span>Allows player to sign in to Player Portal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('players_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-save-player">
+                    <span>💾</span>
+                    <span>{% if action == 'edit' %}Save Changes{% else %}Register Player{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

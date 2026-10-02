@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sports Management System{% endblock %}</title>
+    <meta name="description" content="A comprehensive Sports Management System built with Flask and MySQL.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Accessibility Skip to Main Content Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar" id="main-navbar" aria-label="Main Navigation">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand" style="text-decoration: none;">
+                <span class="nav-icon" aria-hidden="true">🏆</span>
+                <span class="nav-title">SportsPro</span>
+            </a>
+
+            <div class="nav-actions">
+                {% if g.current_user %}
+                    {% if g.current_user.role == 'player' %}
+                        <a href="{{ url_for('player_dashboard') }}" 
+                           class="btn btn-outline btn-sm {% if request.endpoint == 'player_dashboard' %}active{% endif %}" 
+                           id="nav-player-dashboard" 
+                           style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
+                           {% if request.endpoint == 'player_dashboard' %}aria-current="page"{% endif %}>
+                            <span aria-hidden="true">📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('player_profile') }}" 
+                           class="btn btn-outline btn-sm {% if request.endpoint == 'player_profile' %}active{% endif %}" 
+                           id="nav-player-profile" 
+                           style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
+                           {% if request.endpoint == 'player_profile' %}aria-current="page"{% endif %}>
+                            <span aria-hidden="true">👤</span>
+                            <span>Profile</span>
+                        </a>
+                    {% elif g.current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" 
+                           class="btn btn-outline btn-sm {% if request.endpoint in ['admin_dashboard', 'sports_list', 'sports_create', 'sports_edit', 'teams_list', 'teams_create', 'teams_edit', 'players_list', 'players_create', 'players_edit', 'tournaments_list', 'tournaments_create', 'tournaments_edit', 'matches_list', 'matches_create', 'matches_edit', 'match_detail', 'results_list', 'results_create', 'results_edit', 'tournament_standings'] %}active{% endif %}" 
+                           id="nav-admin-dashboard" 
+                           style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
+                           {% if request.endpoint in ['admin_dashboard', 'sports_list', 'sports_create', 'sports_edit', 'teams_list', 'teams_create', 'teams_edit', 'players_list', 'players_create', 'players_edit', 'tournaments_list', 'tournaments_create', 'tournaments_edit', 'matches_list', 'matches_create', 'matches_edit', 'match_detail', 'results_list', 'results_create', 'results_edit', 'tournament_standings'] %}aria-current="page"{% endif %}>
+                            <span aria-hidden="true">⚙️</span>
+                            <span>Admin Console</span>
+                        </a>
+                        <a href="{{ url_for('users_list') }}" 
+                           class="btn btn-outline btn-sm {% if request.endpoint in ['users_list', 'user_detail'] %}active{% endif %}" 
+                           id="nav-admin-users" 
+                           style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
+                           {% if request.endpoint in ['users_list', 'user_detail'] %}aria-current="page"{% endif %}>
+                            <span aria-hidden="true">👥</span>
+                            <span>Users</span>
+                        </a>
+                        <a href="{{ url_for('admin_reports') }}" 
+                           class="btn btn-outline btn-sm {% if request.endpoint == 'admin_reports' %}active{% endif %}" 
+                           id="nav-admin-reports" 
+                           style="font-size: 0.8rem; padding: 0.35rem 0.75rem;"
+                           {% if request.endpoint == 'admin_reports' %}aria-current="page"{% endif %}>
+                            <span aria-hidden="true">📈</span>
+                            <span>Reports</span>
+                        </a>
+                    {% endif %}
+
+                    <span class="nav-user-tag">
+                        <span aria-hidden="true">👤</span>
+                        <strong>{{ g.current_user.username }}</strong>
+                        <span class="nav-role-badge">{{ g.current_user.role }}</span>
+                    </span>
+                    <form method="POST" action="{{ url_for('logout') }}" id="logout-form" style="display: inline-block; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger-outline" id="btn-logout" aria-label="Sign out of account">
+                            Sign Out
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline" id="nav-register-btn" style="margin-right: var(--space-xs);">
+                        Sign Up
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" id="nav-login-btn">
+                        Sign In
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Flash Messages -->
+    <div style="max-width: 1100px; margin: 5.5rem auto 0; padding: 0 var(--space-xl); position: relative; z-index: 10;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }}" role="alert">
+                            <span class="alert-icon" aria-hidden="true">
+                                {% if category == 'success' %}
+                                    ✅
+                                {% elif category in ['error', 'danger'] %}
+                                    ❌
+                                {% elif category == 'warning' %}
+                                    ⚠️
+                                {% else %}
+                                    ℹ️
+                                {% endif %}
+                            </span>
+                            <span class="alert-message">{{ message }}</span>
+                            <button type="button" class="alert-close" aria-label="Close notification" onclick="this.parentElement.remove();">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Page Content Landmark -->
+    <main id="main-content" tabindex="-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="main-footer">
+        <p>Sports Management System &mdash; Phase 4 Authentication Active &mdash; Built with Flask &amp; ❤️</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

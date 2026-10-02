@@ -1,0 +1,124 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Register Player Account — SportsPro{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card" style="max-width: 480px;">
+        <div class="auth-header">
+            <span class="status-badge-active" style="margin-bottom: var(--space-xs);">
+                ● Player Portal
+            </span>
+            <h1 class="auth-title">Create Player Account</h1>
+            <p class="auth-subtitle">Join SportsPro to access your fixtures, roster, and statistics</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" novalidate id="register-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Username -->
+            <div class="form-group">
+                <label for="username" class="form-label">
+                    Username <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-input" 
+                    value="{{ username | default('') }}" 
+                    placeholder="Choose a username" 
+                    maxlength="50"
+                    required 
+                    autocomplete="username"
+                    autofocus
+                >
+                <div class="char-counter">
+                    <span>Letters, numbers, dots, hyphens, and underscores (max 50)</span>
+                </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    Email Address <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    value="{{ email | default('') }}" 
+                    placeholder="Enter your email address" 
+                    maxlength="150"
+                    required 
+                    autocomplete="email"
+                >
+                <div class="char-counter">
+                    <span>A valid and unique email address</span>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    Password <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Create a strong password" 
+                    minlength="8"
+                    maxlength="128"
+                    required 
+                    autocomplete="new-password"
+                >
+                <div class="char-counter">
+                    <span>Minimum 8 characters</span>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">
+                    Confirm Password <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="confirm_password" 
+                    name="confirm_password" 
+                    class="form-input" 
+                    placeholder="Re-enter password" 
+                    minlength="8"
+                    maxlength="128"
+                    required 
+                    autocomplete="new-password"
+                >
+                <div class="char-counter">
+                    <span>Must match the password entered above</span>
+                </div>
+            </div>
+
+            <!-- Info Notice -->
+            <div style="background: rgba(0, 212, 170, 0.06); border: 1px solid rgba(0, 212, 170, 0.2); border-radius: var(--border-radius-sm); padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-lg); font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4;">
+                <strong style="color: var(--color-accent-primary);">💡 Athlete Profile Linking:</strong>
+                After registration, your league administrator can link your login to your verified athlete roster profile.
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btn-register-submit">
+                Create Player Account
+            </button>
+
+            <!-- Link to Sign In -->
+            <div style="text-align: center; margin-top: var(--space-lg); font-size: 0.9rem; color: var(--color-text-secondary);">
+                Already have an account? 
+                <a href="{{ url_for('login') }}" style="color: var(--color-accent-primary); font-weight: 600; text-decoration: none;" id="link-to-login">
+                    Sign In
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

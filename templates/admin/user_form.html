@@ -1,0 +1,166 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Create New User — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 720px;">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('users_list') }}">User Management</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Create User</span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="module-header" style="margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md);">
+            <div>
+                <h1 class="module-title" style="font-size: 1.6rem;">
+                    Create New User Account
+                </h1>
+                <p class="module-subtitle">
+                    Provision login credentials for player access or administrative management
+                </p>
+            </div>
+            <div>
+                <span class="status-badge-active">● New Account</span>
+            </div>
+        </div>
+
+        <form 
+            method="POST" 
+            action="{{ url_for('user_create') }}" 
+            id="user-create-form"
+            novalidate
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Row 1: Username & Role -->
+            <div class="form-row">
+                <!-- Username -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="username" class="form-label">
+                        Username <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        value="{{ username or '' }}" 
+                        placeholder="e.g. john_doe"
+                        maxlength="50"
+                        required
+                        autocomplete="off"
+                    >
+                    <div class="char-counter">
+                        <span>Letters, numbers, dots, hyphens, and underscores</span>
+                    </div>
+                </div>
+
+                <!-- Role -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="role" class="form-label">
+                        Account Role <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                    </label>
+                    <select id="role" name="role" class="form-input" required>
+                        <option value="player" {% if role != 'admin' %}selected{% endif %}>
+                            Player (Default — Access to Player Portal)
+                        </option>
+                        <option value="admin" {% if role == 'admin' %}selected{% endif %}>
+                            Administrator (Full Administrative Control)
+                        </option>
+                    </select>
+                    <div class="char-counter">
+                        <span>Select role to grant portal access</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Email Address -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    Email Address <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    value="{{ email or '' }}" 
+                    placeholder="e.g. jdoe@example.com"
+                    maxlength="150"
+                    required
+                    autocomplete="off"
+                >
+                <div class="char-counter">
+                    <span>Must be a valid and unique email address</span>
+                </div>
+            </div>
+
+            <!-- Row 3: Password & Confirm Password -->
+            <div class="form-row">
+                <!-- Password -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="password" class="form-label">
+                        Password <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Minimum 8 characters"
+                        minlength="8"
+                        maxlength="128"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <div class="char-counter">
+                        <span>At least 8 characters required</span>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="confirm_password" class="form-label">
+                        Confirm Password <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                    </label>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        class="form-input" 
+                        placeholder="Re-enter password"
+                        minlength="8"
+                        maxlength="128"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <div class="char-counter">
+                        <span>Must match password above</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Notice -->
+            <div style="background: rgba(0, 212, 170, 0.06); border: 1px solid rgba(0, 212, 170, 0.2); border-radius: var(--border-radius-sm); padding: var(--space-md); margin-top: var(--space-lg); margin-bottom: var(--space-lg); font-size: 0.88rem; color: var(--color-text-secondary); line-height: 1.5;">
+                <strong style="color: var(--color-accent-primary);">💡 Linking to Player Profile:</strong>
+                After creating a Player account, navigate to <strong>Player Management</strong> to link this account to an existing athlete profile. The player will then be able to log in to the Player Portal to view their personalized schedule, stats, and team fixtures.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('users_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-submit-user">
+                    Create User Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

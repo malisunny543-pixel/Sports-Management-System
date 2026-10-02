@@ -1,0 +1,231 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Player Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('teams_list') }}">Teams</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Player Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Player Management</h1>
+            <p class="module-subtitle">Register and oversee athletes, sport disciplines, and team rosters</p>
+        </div>
+        <div>
+            {% if sports and sports|length > 0 %}
+                <a href="{{ url_for('players_create') }}" class="btn btn-primary" id="btn-add-player">
+                    <span>+</span>
+                    <span>Add Player</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('sports_create') }}" class="btn btn-outline" id="btn-add-sport-first">
+                    <span>🏅</span>
+                    <span>Register Sport First</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not sports or sports|length == 0 %}
+        <!-- Prerequisite Warning: No Sports Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏅</div>
+                <h2 class="empty-state-title">No Sports Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Every player must belong to a sport discipline. You must register at least one sport before adding player profiles.
+                </p>
+                <a href="{{ url_for('sports_create') }}" class="btn btn-primary" id="btn-create-first-sport">
+                    <span>+</span>
+                    <span>Go to Sports Management</span>
+                </a>
+            </div>
+        </div>
+    {% elif players and players|length > 0 %}
+        <!-- Search and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="players-search" 
+                    class="search-input" 
+                    placeholder="Search by player, team, or sport..." 
+                    aria-label="Filter players"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
+                <div>
+                    <select id="player-sport-filter" class="filter-select" aria-label="Filter by sport">
+                        <option value="">All Sports</option>
+                        {% for sport in sports %}
+                            <option value="{{ sport.id }}">{{ sport.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <select id="player-team-filter" class="filter-select" aria-label="Filter by team">
+                        <option value="">All Teams</option>
+                        <option value="unassigned">Unassigned Only</option>
+                        {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }} ({{ team.sport_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <span class="badge-pill">
+                        <span>👤</span>
+                        <span><strong>{{ players|length }}</strong> Total Player{% if players|length != 1 %}s{% endif %}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="players-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th style="width: 200px;">Full Name</th>
+                            <th style="width: 140px;">Sport</th>
+                            <th style="width: 170px;">Current Team</th>
+                            <th style="width: 70px; text-align: center;">Jersey</th>
+                            <th style="width: 90px;">Gender</th>
+                            <th style="width: 120px;">Birth Date</th>
+                            <th style="width: 140px;">Linked Account</th>
+                            <th style="width: 130px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player in players %}
+                            <tr 
+                                data-player-name="{{ player.full_name }}" 
+                                data-sport-name="{{ player.sport_name }}" 
+                                data-sport-id="{{ player.sport_id }}"
+                                data-team-name="{{ player.team_name or 'Unassigned' }}"
+                                data-team-id="{{ player.team_id if player.team_id else 'unassigned' }}"
+                            >
+                                <td>
+                                    <span class="sport-date-cell">#{{ player.id }}</span>
+                                </td>
+                                <td>
+                                    <span class="sport-name-cell">{{ player.full_name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge-sport">
+                                        <span>🏅</span>
+                                        <span>{{ player.sport_name }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if player.team_name %}
+                                        <span class="badge-team">
+                                            <span>🛡️</span>
+                                            <span>{{ player.team_name }}</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-unassigned">
+                                            <span>—</span>
+                                            <span>Unassigned</span>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if player.jersey_number is not none %}
+                                        <span class="jersey-pill">#{{ player.jersey_number }}</span>
+                                    {% else %}
+                                        <span style="color: var(--color-text-muted);">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if player.gender %}
+                                        <span style="text-transform: capitalize; font-size: 0.85rem;">{{ player.gender }}</span>
+                                    {% else %}
+                                        <span style="color: var(--color-text-muted);">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="sport-date-cell">
+                                        {{ player.date_of_birth.strftime('%Y-%m-%d') if player.date_of_birth else '—' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if player.username %}
+                                        <span class="badge-account" title="Linked User Account">
+                                            <span>👤</span>
+                                            <span>@{{ player.username }}</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-account-none">Unlinked</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="action-btn-group" style="justify-content: flex-end;">
+                                        <a 
+                                            href="{{ url_for('players_edit', player_id=player.id) }}" 
+                                            class="btn btn-sm btn-edit" 
+                                            title="Edit {{ player.full_name }}"
+                                            id="btn-edit-player-{{ player.id }}"
+                                        >
+                                            Edit
+                                        </a>
+                                        <form 
+                                            method="POST" 
+                                            action="{{ url_for('players_delete', player_id=player.id) }}" 
+                                            class="delete-player-form" 
+                                            data-player-name="{{ player.full_name }}"
+                                            style="margin: 0;"
+                                        >
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button 
+                                                type="submit" 
+                                                class="btn btn-sm btn-delete" 
+                                                title="Delete {{ player.full_name }}"
+                                                id="btn-delete-player-{{ player.id }}"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr id="no-player-search-results" style="display: none;">
+                            <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+                                🔍 No players match your search or filter criteria.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State (Sports exist, but no players yet) -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">👤</div>
+                <h2 class="empty-state-title">No Players Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Get started by registering athlete profiles and assigning them to sports and teams.
+                </p>
+                <a href="{{ url_for('players_create') }}" class="btn btn-primary" id="btn-add-first-player">
+                    <span>+</span>
+                    <span>Add First Player</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

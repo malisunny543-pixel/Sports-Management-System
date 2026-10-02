@@ -1,0 +1,96 @@
+# =============================================================================
+# .gitignore — Tells Git which files/folders to NEVER track or commit
+# =============================================================================
+
+# -----------------------------------------
+# Python Virtual Environment
+# The venv/ folder contains thousands of library files downloaded by pip.
+# These should NEVER be committed — teammates run `pip install -r requirements.txt`
+# to recreate it on their own machines.
+# -----------------------------------------
+venv/
+env/
+.venv/
+.env/
+
+# -----------------------------------------
+# Environment Variables & Secrets
+# .env files store sensitive data like database passwords and secret keys.
+# NEVER commit these to Git — it's a major security risk.
+# -----------------------------------------
+.env
+.env.*
+*.env
+
+# -----------------------------------------
+# Python Bytecode & Cache
+# Python compiles .py files into .pyc bytecode for faster execution.
+# These are auto-generated and machine-specific — no need to track them.
+# -----------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# -----------------------------------------
+# Flask / Development
+# -----------------------------------------
+instance/
+.flask_session/
+flask_session/
+
+# -----------------------------------------
+# Database files (for later phases)
+# -----------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# -----------------------------------------
+# TLS / SSL Certificate Files
+# -----------------------------------------
+# *.pem files are ignored by default to prevent accidental credential commits.
+#
+# Aiven CA certificate (ca.pem) exception:
+#   The Aiven CA certificate (database/ca.pem) identifies Aiven's Certificate
+#   Authority only — it is NOT a private key or secret. It is safe to commit.
+#   To intentionally track it, force-add it with:
+#       git add -f database/ca.pem
+#   OR add an explicit exception here:
+#       !database/ca.pem
+*.pem
+
+# -----------------------------------------
+# IDE & Editor Files
+# -----------------------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------
+# OS-specific files
+# -----------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# -----------------------------------------
+# Logs
+# -----------------------------------------
+*.log
+logs/
+
+# -----------------------------------------
+# Distribution / Build
+# -----------------------------------------
+dist/
+build/
+*.egg-info/
+.eggs/

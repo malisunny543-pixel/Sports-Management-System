@@ -1,0 +1,353 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Player Portal — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header" style="margin-bottom: var(--space-xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+            <div>
+                <span class="status-badge-active" style="margin-bottom: var(--space-xs);">
+                    ● Player Portal
+                </span>
+                <h1 class="dashboard-title">
+                    Welcome, {{ player.full_name if player else g.current_user.username }}
+                </h1>
+                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin: 0;">
+                    Account Email: <code>{{ g.current_user.email }}</code> &bull; Role: <strong>{{ g.current_user.role }}</strong>
+                </p>
+            </div>
+            <div style="display: flex; gap: var(--space-sm); align-items: center;">
+                <a href="{{ url_for('player_profile') }}" class="btn btn-outline" id="btn-edit-profile-header">
+                    <span>👤</span>
+                    <span>My Profile</span>
+                </a>
+                <form method="POST" action="{{ url_for('logout') }}" id="player-logout-form" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger-outline" id="btn-player-logout">
+                        Sign Out
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if not player %}
+        <!-- Unlinked Profile Warning State -->
+        <div class="table-card">
+            <div class="empty-state" style="padding: var(--space-2xl) var(--space-xl);">
+                <div class="empty-state-icon">⚠️</div>
+                <h2 class="empty-state-title">Athletic Profile Unlinked</h2>
+                <p class="empty-state-desc" style="max-width: 580px; margin-bottom: var(--space-lg);">
+                    Your user account is active, but an administrator has not yet linked your account to an athletic player profile. Once linked by an administrator, your team assignment, scheduled fixtures, match results, and personal statistics will appear here.
+                </p>
+                <div style="display: flex; gap: var(--space-sm); justify-content: center;">
+                    <a href="{{ url_for('player_profile') }}" class="btn btn-primary" id="btn-unlinked-profile">
+                        View Account Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Player Profile & Performance Stats Summary Grid -->
+        <div class="player-profile-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md); margin-bottom: var(--space-lg);">
+                <div>
+                    <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+                        <span class="badge-sport">
+                            <span>🏅</span>
+                            <span>{{ player.sport_name }}</span>
+                        </span>
+                        {% if player.jersey_number %}
+                            <span class="badge-score-pill" style="min-width: unset; padding: 0.15rem 0.5rem; font-size: 0.9rem;">
+                                #{{ player.jersey_number }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--color-text-primary); margin: 0 0 0.2rem 0;">
+                        {{ player.full_name }}
+                    </h2>
+                    <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin: 0;">
+                        Team: <strong style="color: var(--color-accent-primary);">{{ player.team_name or 'Unassigned / Free Agent' }}</strong>
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('player_profile') }}" class="btn btn-outline btn-sm" id="btn-edit-profile-card">
+                        Edit Personal Details &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Overview Row -->
+            <div class="player-stat-grid" style="margin-bottom: 0;">
+                <div class="player-stat-box">
+                    <span class="player-stat-title">Matches With Stats</span>
+                    <span class="player-stat-number" id="stat-matches-count">{{ stats_matches_count }}</span>
+                </div>
+                <div class="player-stat-box">
+                    <span class="player-stat-title">Goals Scored</span>
+                    <span class="player-stat-number stat-goals" id="stat-goals-count">{{ career_goals }}</span>
+                </div>
+                <div class="player-stat-box">
+                    <span class="player-stat-title">Assists</span>
+                    <span class="player-stat-number stat-assists" id="stat-assists-count">{{ career_assists }}</span>
+                </div>
+                <div class="player-stat-box">
+                    <span class="player-stat-title">Points</span>
+                    <span class="player-stat-number stat-points" id="stat-points-count">{{ career_points }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout: Upcoming Schedule & Recent Results -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-2xl);">
+            <!-- Upcoming Fixtures Card -->
+            <div class="table-card">
+                <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        📅 Upcoming Match Schedule
+                    </h3>
+                    <span class="badge-status badge-status-scheduled">Fixtures</span>
+                </div>
+
+                {% if upcoming_matches and upcoming_matches|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tournament</th>
+                                    <th>Matchup</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Venue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in upcoming_matches %}
+                                <tr>
+                                    <td style="font-weight: 600; color: var(--color-text-primary);">
+                                        {{ m.tournament_name }}
+                                    </td>
+                                    <td>
+                                        <div class="matchup-teams" style="font-size: 0.88rem;">
+                                            <span {% if m.team1_id == player.team_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                                {{ m.team1_name }}
+                                            </span>
+                                            <span class="vs-pill">vs</span>
+                                            <span {% if m.team2_id == player.team_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                                {{ m.team2_name }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td style="font-size: 0.85rem; color: var(--color-text-secondary); white-space: nowrap;">
+                                        🕒 {{ m.match_datetime }}
+                                    </td>
+                                    <td style="font-size: 0.85rem; color: var(--color-text-muted);">
+                                        📍 {{ m.venue or 'TBD' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                        <p style="color: var(--color-text-muted); font-size: 0.88rem; margin: 0;">
+                            No upcoming matches scheduled for your team at this time.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Results Card -->
+            <div class="table-card">
+                <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        🏆 Recent Match Results
+                    </h3>
+                    <span class="badge-status badge-status-completed">Completed</span>
+                </div>
+
+                {% if recent_results and recent_results|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tournament</th>
+                                    <th>Matchup</th>
+                                    <th style="text-align: center;">Score</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in recent_results %}
+                                <tr>
+                                    <td style="font-size: 0.88rem; font-weight: 600;">
+                                        {{ r.tournament_name }}
+                                    </td>
+                                    <td>
+                                        <div class="matchup-teams" style="font-size: 0.88rem;">
+                                            <span {% if r.team1_id == player.team_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                                {{ r.team1_name }}
+                                            </span>
+                                            <span class="vs-pill">vs</span>
+                                            <span {% if r.team2_id == player.team_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                                {{ r.team2_name }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="badge-score-pill" style="font-size: 0.95rem; min-width: unset; padding: 0.15rem 0.5rem;">
+                                            {{ r.team1_score }} &ndash; {{ r.team2_score }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if r.winner_team_id == player.team_id %}
+                                            <span class="badge-status badge-outcome-win">
+                                                ✅ Won
+                                            </span>
+                                        {% elif r.winner_team_id is none %}
+                                            <span class="badge-status badge-outcome-draw">
+                                                🤝 Draw
+                                            </span>
+                                        {% else %}
+                                            <span class="badge-status badge-status-cancelled">
+                                                ❌ Lost
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                        <p style="color: var(--color-text-muted); font-size: 0.88rem; margin: 0;">
+                            No completed match results recorded for your team yet.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Individual Match Performance Statistics Table -->
+        <div class="table-card" style="margin-bottom: var(--space-2xl);">
+            <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                        ⭐ My Individual Match Performance
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0.2rem 0 0 0;">
+                        Detailed statistics recorded for your appearances in official matches
+                    </p>
+                </div>
+                {% if player_stats and player_stats|length > 0 %}
+                    <span class="badge-matches-count">{{ player_stats|length }} Recorded</span>
+                {% endif %}
+            </div>
+
+            {% if player_stats and player_stats|length > 0 %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tournament</th>
+                                <th>Match Fixture</th>
+                                <th>Date</th>
+                                <th style="text-align: center; width: 80px;">Goals</th>
+                                <th style="text-align: center; width: 80px;">Assists</th>
+                                <th style="text-align: center; width: 80px;">Points</th>
+                                <th style="text-align: center;">Final Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in player_stats %}
+                            <tr>
+                                <td style="font-weight: 600; color: var(--color-text-primary);">
+                                    {{ s.tournament_name }}
+                                </td>
+                                <td>
+                                    <div class="matchup-teams" style="font-size: 0.88rem;">
+                                        <span>{{ s.team1_name }}</span>
+                                        <span class="vs-pill">vs</span>
+                                        <span>{{ s.team2_name }}</span>
+                                    </div>
+                                </td>
+                                <td style="font-size: 0.85rem; color: var(--color-text-secondary); white-space: nowrap;">
+                                    {{ s.match_datetime }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #00d4aa;">
+                                    {{ s.goals }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #6c63ff;">
+                                    {{ s.assists }}
+                                </td>
+                                <td style="text-align: center; font-weight: 700; color: #ffaa00;">
+                                    {{ s.points }}
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="badge-score-pill" style="font-size: 0.85rem; min-width: unset; padding: 0.15rem 0.45rem;">
+                                        {{ s.team1_score }} &ndash; {{ s.team2_score }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                    <div class="empty-state-icon" style="font-size: 2rem;">📊</div>
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                        No individual match performance statistics have been recorded for your account yet.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Relevant Tournaments Card -->
+        {% if team_tournaments and team_tournaments|length > 0 %}
+        <div class="table-card">
+            <div style="padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border);">
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-primary); margin: 0;">
+                    🏆 Team Tournaments
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tournament</th>
+                            <th>Window</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in team_tournaments %}
+                        <tr>
+                            <td>
+                                <strong style="color: var(--color-text-primary);">{{ t.name }}</strong>
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--color-text-secondary);">
+                                📅 {{ t.start_date }} &rarr; {{ t.end_date }}
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ t.status }}">
+                                    {{ t.status }}
+                                </span>
+                            </td>
+                            <td class="table-desc-cell">
+                                {{ t.description or '—' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

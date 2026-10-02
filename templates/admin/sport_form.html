@@ -1,0 +1,119 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+    {% if action == 'edit' %}Edit Sport: {{ sport.name }}{% else %}Add New Sport{% endif %} — SportsPro
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 720px;">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('sports_list') }}">Sports Management</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>{% if action == 'edit' %}Edit Sport{% else %}Add Sport{% endif %}</span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="module-header" style="margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md);">
+            <div>
+                <h1 class="module-title" style="font-size: 1.6rem;">
+                    {% if action == 'edit' %}
+                        Edit Sport: <span style="color: var(--color-accent-primary);">{{ sport.name }}</span>
+                    {% else %}
+                        Register New Sport
+                    {% endif %}
+                </h1>
+                <p class="module-subtitle">
+                    {% if action == 'edit' %}
+                        Update the sport classification name and descriptive summary.
+                    {% else %}
+                        Define a new sport discipline to organize teams and tournaments.
+                    {% endif %}
+                </p>
+            </div>
+            {% if action == 'edit' and sport.id %}
+                <div>
+                    <span class="badge-pill">ID #{{ sport.id }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <form 
+            method="POST" 
+            action="{% if action == 'edit' %}{{ url_for('sports_edit', sport_id=sport.id) }}{% else %}{{ url_for('sports_create') }}{% endif %}"
+            id="sport-form"
+            novalidate
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Sport Name -->
+            <div class="form-group">
+                <label for="name" class="form-label">
+                    Sport Name <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-input" 
+                    value="{{ name if name is defined else (sport.name if sport else '') }}" 
+                    maxlength="100" 
+                    placeholder="e.g. Football, Basketball, Cricket"
+                    required
+                    autocomplete="off"
+                    autofocus
+                >
+                <div class="char-counter">
+                    <span>Required &bull; Max 100 characters</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description" class="form-label">Description (Optional)</label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-textarea" 
+                    maxlength="1000" 
+                    rows="4" 
+                    placeholder="Brief description of rules, team structure, or sport details..."
+                >{{ description if description is defined else (sport.description if sport and sport.description else '') }}</textarea>
+                <div class="char-counter">
+                    <span id="desc-count-label">Max 1000 characters</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('sports_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-save-sport">
+                    <span>💾</span>
+                    <span>{% if action == 'edit' %}Save Changes{% else %}Create Sport{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live character counter for description textarea
+    const descArea = document.getElementById('description');
+    const descLabel = document.getElementById('desc-count-label');
+    if (descArea && descLabel) {
+        function updateCount() {
+            const remaining = 1000 - descArea.value.length;
+            descLabel.textContent = `${descArea.value.length} / 1000 characters (${remaining} remaining)`;
+        }
+        descArea.addEventListener('input', updateCount);
+        updateCount();
+    }
+</script>
+{% endblock %}

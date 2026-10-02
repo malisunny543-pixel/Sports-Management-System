@@ -1,0 +1,58 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Sign In — Sports Management System{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to manage sports, teams, and matches</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" novalidate id="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-input" 
+                    value="{{ username | default('') }}" 
+                    placeholder="Enter your username" 
+                    required 
+                    autocomplete="username"
+                    autofocus
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Enter your password" 
+                    required 
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btn-login-submit">
+                Sign In
+            </button>
+
+            <!-- Link to Sign Up -->
+            <div style="text-align: center; margin-top: var(--space-lg); font-size: 0.9rem; color: var(--color-text-secondary);">
+                Don't have a player account? 
+                <a href="{{ url_for('register') }}" style="color: var(--color-accent-primary); font-weight: 600; text-decoration: none;" id="link-to-register">
+                    Sign Up
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

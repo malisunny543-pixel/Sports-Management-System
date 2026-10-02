@@ -1,0 +1,247 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Results & Score Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('matches_list') }}">Matches</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Results &amp; Scores</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Results &amp; Score Management</h1>
+            <p class="module-subtitle">Record official scorelines, validate winner outcomes, and document tie-breaks</p>
+        </div>
+        <div>
+            <a href="{{ url_for('matches_list') }}" class="btn btn-outline" id="btn-matches-fixtures">
+                <span>⚔️</span>
+                <span>Match Fixtures</span>
+            </a>
+        </div>
+    </div>
+
+    {% if not matches or matches|length == 0 %}
+        <!-- Prerequisite Warning: No Matches Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">⏱️</div>
+                <h2 class="empty-state-title">No Matches Scheduled Yet</h2>
+                <p class="empty-state-desc">
+                    Results can only be recorded for scheduled matches. Create a match fixture before managing scorelines.
+                </p>
+                <a href="{{ url_for('matches_create') }}" class="btn btn-primary" id="btn-schedule-match-first">
+                    <span>+</span>
+                    <span>Schedule Match</span>
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Search, Filters, and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="results-search" 
+                    class="search-input" 
+                    placeholder="Search by tournament, team name, or venue..."
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center;">
+                <!-- Tournament Filter -->
+                <select id="result-tournament-filter" class="filter-select" aria-label="Filter results by tournament">
+                    <option value="">All Tournaments</option>
+                    {% for t in tournaments %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Sport Filter -->
+                <select id="result-sport-filter" class="filter-select" aria-label="Filter results by sport">
+                    <option value="">All Sports</option>
+                    {% for s in sports %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Outcome Filter -->
+                <select id="result-outcome-filter" class="filter-select" aria-label="Filter results by outcome">
+                    <option value="">All Outcomes</option>
+                    <option value="win">Decisive Win</option>
+                    <option value="draw">Draw / Tied</option>
+                    <option value="pending">Result Pending</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Filter Count Indicator -->
+        <div style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: center;">
+            <span id="results-count-display" style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500;">
+                Showing {{ matches|length }} of {{ matches|length }} results
+            </span>
+            <span style="font-size: 0.82rem; color: var(--color-text-muted);">
+                Recorded: <strong>{{ recorded_count }}</strong> &bull; Pending: <strong>{{ pending_count }}</strong>
+            </span>
+        </div>
+
+        <!-- Results Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="results-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 55px;">ID</th>
+                            <th>Tournament</th>
+                            <th>Matchup</th>
+                            <th>Sport</th>
+                            <th style="text-align: center;">Score</th>
+                            <th>Official Outcome</th>
+                            <th>Status</th>
+                            <th style="text-align: right; width: 190px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in matches %}
+                        <tr 
+                            data-match-id="{{ match.id }}"
+                            data-tournament-id="{{ match.tournament_id }}"
+                            data-tournament-name="{{ match.tournament_name }}"
+                            data-sport-id="{{ match.sport_id }}"
+                            data-sport-name="{{ match.sport_name }}"
+                            data-team1-name="{{ match.team1_name }}"
+                            data-team2-name="{{ match.team2_name }}"
+                            data-match-venue="{{ match.venue or '' }}"
+                            data-result-outcome="{% if match.has_result %}{% if match.winner_team_id %}win{% else %}draw{% endif %}{% else %}pending{% endif %}"
+                        >
+                            <td class="table-cell-id">#{{ match.id }}</td>
+                            <td>
+                                <strong style="color: var(--color-text-primary); font-size: 0.95rem;">
+                                    {{ match.tournament_name }}
+                                </strong>
+                            </td>
+                            <td>
+                                <div class="matchup-teams">
+                                    <span {% if match.winner_team_id == match.team1_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                        {{ match.team1_name }}
+                                    </span>
+                                    <span class="vs-pill">vs</span>
+                                    <span {% if match.winner_team_id == match.team2_id %}style="color: var(--color-accent-primary); font-weight: 700;"{% endif %}>
+                                        {{ match.team2_name }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-sport">
+                                    <span>🏅</span>
+                                    <span>{{ match.sport_name }}</span>
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                {% if match.has_result %}
+                                    <span class="badge-score-pill">
+                                        {{ match.team1_score }} &ndash; {{ match.team2_score }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge-outcome-pending" style="font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">
+                                        &mdash;
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if match.has_result %}
+                                    {% if match.winner_team_id %}
+                                        <span class="badge-status badge-outcome-win" title="Winner: {{ match.winner_team_name }}">
+                                            🥇 {{ match.winner_team_name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-status badge-outcome-draw" title="Draw / Tied">
+                                            🤝 Draw
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge-status badge-outcome-pending">
+                                        ⏳ Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ match.status }}">
+                                    {% if match.status == 'scheduled' %}
+                                        ⏳ Scheduled
+                                    {% elif match.status == 'ongoing' %}
+                                        🔥 Ongoing
+                                    {% elif match.status == 'completed' %}
+                                        ✅ Completed
+                                    {% elif match.status == 'cancelled' %}
+                                        ❌ Cancelled
+                                    {% else %}
+                                        {{ match.status }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <a 
+                                        href="{{ url_for('matches_detail', match_id=match.id) }}" 
+                                        class="btn btn-outline btn-xs"
+                                        id="btn-view-match-{{ match.id }}"
+                                        title="View Match Details"
+                                    >
+                                        View
+                                    </a>
+
+                                    {% if match.status == 'cancelled' %}
+                                        <span class="btn btn-outline btn-xs" style="opacity: 0.5; cursor: not-allowed;" title="Cannot record results for cancelled matches">
+                                            Cancelled
+                                        </span>
+                                    {% elif match.has_result %}
+                                        <a 
+                                            href="{{ url_for('results_edit', match_id=match.id) }}" 
+                                            class="btn btn-primary btn-xs"
+                                            id="btn-edit-result-{{ match.id }}"
+                                            title="Edit Result"
+                                        >
+                                            Edit Score
+                                        </a>
+                                    {% else %}
+                                        <a 
+                                            href="{{ url_for('results_edit', match_id=match.id) }}" 
+                                            class="btn btn-primary btn-xs"
+                                            id="btn-record-result-{{ match.id }}"
+                                            title="Record Official Score"
+                                        >
+                                            Record Score
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Dynamic Search / Filter Empty State (Hidden by default) -->
+                        <tr id="no-result-search-results" style="display: none;">
+                            <td colspan="8" style="text-align: center; padding: var(--space-2xl);">
+                                <div style="color: var(--color-text-muted); font-size: 1.1rem; margin-bottom: var(--space-xs);">
+                                    🔍 No match results match your search or filter criteria
+                                </div>
+                                <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin: 0;">
+                                    Try clearing the search query or adjusting the tournament, sport, or outcome filters.
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

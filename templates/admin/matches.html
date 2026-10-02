@@ -1,0 +1,275 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Matches Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('tournaments_list') }}">Tournaments</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Matches Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Matches Management</h1>
+            <p class="module-subtitle">Schedule competition fixtures, manage match states, and track event venues</p>
+        </div>
+        <div>
+            {% if tournaments and tournaments|length > 0 and teams and teams|length >= 2 %}
+                <a href="{{ url_for('matches_create') }}" class="btn btn-primary" id="btn-add-match">
+                    <span>+</span>
+                    <span>Add Match</span>
+                </a>
+            {% elif not tournaments or tournaments|length == 0 %}
+                <a href="{{ url_for('tournaments_create') }}" class="btn btn-outline" id="btn-add-tournament-first">
+                    <span>🏆</span>
+                    <span>Create Tournament First</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('teams_create') }}" class="btn btn-outline" id="btn-add-team-first">
+                    <span>🛡️</span>
+                    <span>Register Teams First</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not tournaments or tournaments|length == 0 %}
+        <!-- Prerequisite Warning: No Tournaments Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏆</div>
+                <h2 class="empty-state-title">No Tournaments Scheduled Yet</h2>
+                <p class="empty-state-desc">
+                    Every match must belong to an active tournament. You must create at least one tournament before scheduling matches.
+                </p>
+                <a href="{{ url_for('tournaments_create') }}" class="btn btn-primary" id="btn-create-first-tournament">
+                    <span>+</span>
+                    <span>Go to Tournament Management</span>
+                </a>
+            </div>
+        </div>
+    {% elif not teams or teams|length < 2 %}
+        <!-- Prerequisite Warning: Not Enough Teams Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🛡️</div>
+                <h2 class="empty-state-title">Not Enough Teams Registered</h2>
+                <p class="empty-state-desc">
+                    Scheduling a match requires at least two competing teams in the same sport discipline.
+                </p>
+                <a href="{{ url_for('teams_create') }}" class="btn btn-primary" id="btn-create-first-team">
+                    <span>+</span>
+                    <span>Go to Teams Management</span>
+                </a>
+            </div>
+        </div>
+    {% elif matches and matches|length > 0 %}
+        <!-- Search, Filters, and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="matches-search" 
+                    class="search-input" 
+                    placeholder="Search by tournament, team name, or venue..."
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center;">
+                <!-- Tournament Filter -->
+                <select id="match-tournament-filter" class="filter-select" aria-label="Filter matches by tournament">
+                    <option value="">All Tournaments</option>
+                    {% for t in tournaments %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Sport Filter -->
+                <select id="match-sport-filter" class="filter-select" aria-label="Filter matches by sport">
+                    <option value="">All Sports</option>
+                    {% for s in sports %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Status Filter -->
+                <select id="match-status-filter" class="filter-select" aria-label="Filter matches by status">
+                    <option value="">All Statuses</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Filter Count Indicator -->
+        <div style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: center;">
+            <span id="matches-count-display" style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500;">
+                Showing {{ matches|length }} of {{ matches|length }} matches
+            </span>
+        </div>
+
+        <!-- Matches Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="matches-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 55px;">ID</th>
+                            <th>Tournament</th>
+                            <th>Matchup</th>
+                            <th>Sport</th>
+                            <th>Date & Time</th>
+                            <th>Venue</th>
+                            <th>Status</th>
+                            <th style="text-align: right; width: 190px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in matches %}
+                        <tr 
+                            data-match-id="{{ match.id }}"
+                            data-tournament-id="{{ match.tournament_id }}"
+                            data-tournament-name="{{ match.tournament_name }}"
+                            data-sport-id="{{ match.sport_id }}"
+                            data-sport-name="{{ match.sport_name }}"
+                            data-team1-name="{{ match.team1_name }}"
+                            data-team2-name="{{ match.team2_name }}"
+                            data-match-venue="{{ match.venue or '' }}"
+                            data-match-status="{{ match.status }}"
+                        >
+                            <td class="table-cell-id">#{{ match.id }}</td>
+                            <td>
+                                <strong style="color: var(--color-text-primary); font-size: 0.95rem;">
+                                    {{ match.tournament_name }}
+                                </strong>
+                            </td>
+                            <td>
+                                <div class="matchup-teams">
+                                    <span>{{ match.team1_name }}</span>
+                                    <span class="vs-pill">vs</span>
+                                    <span>{{ match.team2_name }}</span>
+                                </div>
+                                {% if match.has_result %}
+                                    <div style="margin-top: 0.2rem;">
+                                        <span class="match-score-display">
+                                            {{ match.team1_score }} - {{ match.team2_score }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-sport">
+                                    <span>🏅</span>
+                                    <span>{{ match.sport_name }}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem; color: var(--color-text-primary);">
+                                    <span>🕒 {{ match.match_datetime }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-size: 0.88rem; color: var(--color-text-secondary);">
+                                    📍 {{ match.venue or 'Unspecified' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ match.status }}">
+                                    {% if match.status == 'scheduled' %}
+                                        ⏳ Scheduled
+                                    {% elif match.status == 'ongoing' %}
+                                        🔥 Ongoing
+                                    {% elif match.status == 'completed' %}
+                                        ✅ Completed
+                                    {% elif match.status == 'cancelled' %}
+                                        ❌ Cancelled
+                                    {% else %}
+                                        {{ match.status }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <a 
+                                        href="{{ url_for('matches_detail', match_id=match.id) }}" 
+                                        class="btn btn-outline btn-xs"
+                                        id="btn-view-match-{{ match.id }}"
+                                        title="View Match #{{ match.id }} details"
+                                    >
+                                        View
+                                    </a>
+
+                                    <a 
+                                        href="{{ url_for('matches_edit', match_id=match.id) }}" 
+                                        class="btn btn-outline btn-xs"
+                                        id="btn-edit-match-{{ match.id }}"
+                                        title="Edit Match #{{ match.id }}"
+                                    >
+                                        Edit
+                                    </a>
+                                    
+                                    <form 
+                                        method="POST" 
+                                        action="{{ url_for('matches_delete', match_id=match.id) }}"
+                                        class="delete-match-form"
+                                        data-match-info="Match #{{ match.id }} ({{ match.team1_name }} vs {{ match.team2_name }})"
+                                        style="display: inline; margin: 0;"
+                                    >
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button 
+                                            type="submit" 
+                                            class="btn btn-danger-outline btn-xs"
+                                            id="btn-delete-match-{{ match.id }}"
+                                            title="Delete Match #{{ match.id }}"
+                                        >
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Dynamic Search / Filter Empty State (Hidden by default) -->
+                        <tr id="no-match-search-results" style="display: none;">
+                            <td colspan="8" style="text-align: center; padding: var(--space-2xl);">
+                                <div style="color: var(--color-text-muted); font-size: 1.1rem; margin-bottom: var(--space-xs);">
+                                    🔍 No matches match your search or filter criteria
+                                </div>
+                                <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin: 0;">
+                                    Try clearing the search query or adjusting tournament, sport, or status filters.
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- No Matches Scheduled in DB State -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">⚔️</div>
+                <h2 class="empty-state-title">No Matches Scheduled Yet</h2>
+                <p class="empty-state-desc">
+                    Schedule fixture matchups between eligible teams across registered tournaments.
+                </p>
+                <a href="{{ url_for('matches_create') }}" class="btn btn-primary" id="btn-create-first-match">
+                    <span>+</span>
+                    <span>Schedule First Match</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

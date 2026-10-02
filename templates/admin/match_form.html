@@ -1,0 +1,192 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+    {% if action == 'add' %}
+        Schedule Match — SportsPro
+    {% else %}
+        Edit Match #{{ match.id }} — SportsPro
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('matches_list') }}">Matches</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>{% if action == 'add' %}Schedule Match{% else %}Edit Match #{{ match.id }}{% endif %}</span>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">
+                {% if action == 'add' %}
+                    ⚔️ Schedule New Match
+                {% else %}
+                    ✏️ Edit Match #{{ match.id }}
+                {% endif %}
+            </h1>
+            <p class="form-subtitle">
+                {% if action == 'add' %}
+                    Pair two distinct teams competing in the same tournament sport discipline
+                {% else %}
+                    Update match fixture timing, venue, or competition state
+                {% endif %}
+            </p>
+        </div>
+
+        <form 
+            method="POST" 
+            action="{% if action == 'add' %}{{ url_for('matches_create') }}{% else %}{{ url_for('matches_edit', match_id=match.id) }}{% endif %}"
+            id="match-form"
+            novalidate
+        >
+            <!-- CSRF Protection Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Tournament Selection -->
+            <div class="form-group">
+                <label for="match_tournament_id" class="form-label">
+                    Tournament Event <span style="color: var(--color-accent-danger);">*</span>
+                </label>
+                <select id="match_tournament_id" name="tournament_id" class="form-input" required {% if action == 'add' %}autofocus{% endif %}>
+                    <option value="">-- Select Tournament --</option>
+                    {% for t in tournaments %}
+                        <option 
+                            value="{{ t.id }}" 
+                            data-sport-id="{{ t.sport_id }}"
+                            {% if selected_tournament_id is defined and selected_tournament_id|string == t.id|string %}
+                                selected
+                            {% elif match is defined and match.tournament_id|string == t.id|string %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ t.name }} ({{ t.sport_name }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="char-counter">
+                    <span>Teams must compete in the sport of the selected tournament</span>
+                </div>
+            </div>
+
+            <!-- Competing Teams: Team 1 & Team 2 -->
+            <div class="form-row">
+                <!-- Team 1 -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="match_team1_id" class="form-label">
+                        Team 1 (Home) <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <select id="match_team1_id" name="team1_id" class="form-input" required>
+                        <option value="">-- Select Team 1 --</option>
+                        {% for team in teams %}
+                            <option 
+                                value="{{ team.id }}" 
+                                data-sport-id="{{ team.sport_id }}"
+                                {% if selected_team1_id is defined and selected_team1_id|string == team.id|string %}
+                                    selected
+                                {% elif match is defined and match.team1_id|string == team.id|string %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ team.name }} ({{ team.sport_name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Team 2 -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="match_team2_id" class="form-label">
+                        Team 2 (Away) <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <select id="match_team2_id" name="team2_id" class="form-input" required>
+                        <option value="">-- Select Team 2 --</option>
+                        {% for team in teams %}
+                            <option 
+                                value="{{ team.id }}" 
+                                data-sport-id="{{ team.sport_id }}"
+                                {% if selected_team2_id is defined and selected_team2_id|string == team.id|string %}
+                                    selected
+                                {% elif match is defined and match.team2_id|string == team.id|string %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ team.name }} ({{ team.sport_name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Match Timing & Status -->
+            <div class="form-row">
+                <!-- Date & Time -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="match_datetime" class="form-label">
+                        Match Date & Time <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <input 
+                        type="datetime-local" 
+                        id="match_datetime" 
+                        name="match_datetime" 
+                        class="form-input" 
+                        value="{% if match_datetime is defined %}{{ match_datetime }}{% elif match is defined %}{{ match.formatted_datetime }}{% endif %}"
+                        required
+                    >
+                    <div class="char-counter">
+                        <span>Local match kickoff date & time</span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="match_status" class="form-label">
+                        Match Status <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <select id="match_status" name="status" class="form-input" required>
+                        {% set current_status = status if status is defined else (match.status if match is defined else 'scheduled') %}
+                        <option value="scheduled" {% if current_status == 'scheduled' %}selected{% endif %}>⏳ Scheduled</option>
+                        <option value="ongoing" {% if current_status == 'ongoing' %}selected{% endif %}>🔥 Ongoing</option>
+                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>✅ Completed</option>
+                        <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Venue -->
+            <div class="form-group">
+                <label for="match_venue" class="form-label">
+                    Venue / Location <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="match_venue" 
+                    name="venue" 
+                    class="form-input" 
+                    placeholder="e.g. Wembley Stadium, Court 1, Main Arena"
+                    value="{% if venue is defined %}{{ venue }}{% elif match is defined %}{{ match.venue or '' }}{% endif %}"
+                    maxlength="200"
+                >
+                <div class="char-counter">
+                    <span>Max 200 characters</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('matches_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-save-match">
+                    <span>💾</span>
+                    <span>{% if action == 'add' %}Schedule Match{% else %}Update Match{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

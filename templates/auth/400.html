@@ -1,0 +1,28 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Bad Request — 400{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 520px; text-align: center;">
+    <div class="auth-card">
+        <div style="font-size: 3.5rem; margin-bottom: var(--space-sm);">⚠️</div>
+        <h1 class="auth-title" style="color: #ffb86c;">400 Bad Request</h1>
+        <p class="auth-subtitle" style="margin-bottom: var(--space-xl);">
+            {% if error_description %}
+                {{ error_description }}
+            {% else %}
+                The request could not be understood or the security validation token was invalid/expired.
+            {% endif %}
+        </p>
+
+        <div style="display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('index') }}" class="btn btn-outline" id="btn-return-home">
+                Return to Home
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-primary" id="btn-login-again">
+                Log In
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

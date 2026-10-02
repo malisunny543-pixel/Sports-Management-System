@@ -1,0 +1,233 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Tournament Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Tournament Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Tournament Management</h1>
+            <p class="module-subtitle">Organize and monitor championships, event windows, and match fixtures</p>
+        </div>
+        <div>
+            {% if sports and sports|length > 0 %}
+                <a href="{{ url_for('tournaments_create') }}" class="btn btn-primary" id="btn-add-tournament">
+                    <span>+</span>
+                    <span>Add Tournament</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('sports_create') }}" class="btn btn-outline" id="btn-add-sport-first">
+                    <span>🏅</span>
+                    <span>Register Sport First</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not sports or sports|length == 0 %}
+        <!-- Prerequisite Warning: No Sports Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏅</div>
+                <h2 class="empty-state-title">No Sports Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Every tournament must belong to a registered sport category. You must create at least one sport before scheduling tournaments.
+                </p>
+                <a href="{{ url_for('sports_create') }}" class="btn btn-primary" id="btn-create-first-sport">
+                    <span>+</span>
+                    <span>Go to Sports Management</span>
+                </a>
+            </div>
+        </div>
+    {% elif tournaments and tournaments|length > 0 %}
+        <!-- Search, Filters, and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="tournaments-search" 
+                    class="search-input" 
+                    placeholder="Search by tournament name or description..."
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center;">
+                <!-- Sport Filter -->
+                <select id="tournament-sport-filter" class="filter-select" aria-label="Filter tournaments by sport">
+                    <option value="">All Sports</option>
+                    {% for sport in sports %}
+                        <option value="{{ sport.id }}">{{ sport.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Status Filter -->
+                <select id="tournament-status-filter" class="filter-select" aria-label="Filter tournaments by status">
+                    <option value="">All Statuses</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Filter Count Indicator -->
+        <div style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: center;">
+            <span id="tournaments-count-display" style="font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500;">
+                Showing {{ tournaments|length }} of {{ tournaments|length }} tournaments
+            </span>
+        </div>
+
+        <!-- Tournaments Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="tournaments-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Tournament Name</th>
+                            <th>Sport</th>
+                            <th>Event Window</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th style="text-align: center;">Matches</th>
+                            <th style="text-align: right; width: 220px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tournament in tournaments %}
+                        <tr 
+                            data-tournament-id="{{ tournament.id }}"
+                            data-tournament-name="{{ tournament.name }}"
+                            data-sport-id="{{ tournament.sport_id }}"
+                            data-sport-name="{{ tournament.sport_name }}"
+                            data-tournament-status="{{ tournament.status }}"
+                            data-tournament-desc="{{ tournament.description or '' }}"
+                        >
+                            <td class="table-cell-id">#{{ tournament.id }}</td>
+                            <td>
+                                <strong style="color: var(--color-text-primary); font-size: 0.95rem;">
+                                    {{ tournament.name }}
+                                </strong>
+                            </td>
+                            <td>
+                                <span class="badge-sport">
+                                    <span>🏅</span>
+                                    <span>{{ tournament.sport_name }}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem; color: var(--color-text-primary);">
+                                    <span>📅 {{ tournament.start_date }}</span>
+                                    <span style="color: var(--color-text-muted); margin: 0 0.25rem;">&rarr;</span>
+                                    <span>{{ tournament.end_date }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ tournament.status }}">
+                                    {% if tournament.status == 'upcoming' %}
+                                        ⏳ Upcoming
+                                    {% elif tournament.status == 'ongoing' %}
+                                        🔥 Ongoing
+                                    {% elif tournament.status == 'completed' %}
+                                        ✅ Completed
+                                    {% elif tournament.status == 'cancelled' %}
+                                        ❌ Cancelled
+                                    {% else %}
+                                        {{ tournament.status }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="table-desc-cell" title="{{ tournament.description or 'No description provided' }}">
+                                {{ tournament.description or '—' }}
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge-matches-count" title="{{ tournament.match_count }} scheduled match(es)">
+                                    {{ tournament.match_count }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <a 
+                                        href="{{ url_for('tournaments_standings', tournament_id=tournament.id) }}" 
+                                        class="btn btn-outline btn-xs"
+                                        id="btn-standings-tournament-{{ tournament.id }}"
+                                        title="View Standings for {{ tournament.name }}"
+                                    >
+                                        Standings
+                                    </a>
+
+                                    <a 
+                                        href="{{ url_for('tournaments_edit', tournament_id=tournament.id) }}" 
+                                        class="btn btn-outline btn-xs"
+                                        id="btn-edit-tournament-{{ tournament.id }}"
+                                        title="Edit {{ tournament.name }}"
+                                    >
+                                        Edit
+                                    </a>
+                                    
+                                    <form 
+                                        method="POST" 
+                                        action="{{ url_for('tournaments_delete', tournament_id=tournament.id) }}"
+                                        class="delete-tournament-form"
+                                        data-tournament-name="{{ tournament.name }}"
+                                        style="display: inline; margin: 0;"
+                                    >
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button 
+                                            type="submit" 
+                                            class="btn btn-danger-outline btn-xs"
+                                            id="btn-delete-tournament-{{ tournament.id }}"
+                                            title="Delete {{ tournament.name }}"
+                                        >
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Dynamic Search / Filter Empty State (Hidden by default) -->
+                        <tr id="no-tournament-search-results" style="display: none;">
+                            <td colspan="8" style="text-align: center; padding: var(--space-2xl);">
+                                <div style="color: var(--color-text-muted); font-size: 1.1rem; margin-bottom: var(--space-xs);">
+                                    🔍 No tournaments match your search or filter criteria
+                                </div>
+                                <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin: 0;">
+                                    Try clearing the search query or adjusting the sport/status filters.
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- No Tournaments Registered in DB State -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏆</div>
+                <h2 class="empty-state-title">No Tournaments Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Schedule and manage competitions by adding your first tournament event.
+                </p>
+                <a href="{{ url_for('tournaments_create') }}" class="btn btn-primary" id="btn-create-first-tournament">
+                    <span>+</span>
+                    <span>Create First Tournament</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

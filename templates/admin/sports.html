@@ -1,0 +1,157 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Sports Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Sports Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Sports Management</h1>
+            <p class="module-subtitle">Register and oversee sporting categories, rules, and event classifications</p>
+        </div>
+        <div>
+            <a href="{{ url_for('sports_create') }}" class="btn btn-primary" id="btn-add-sport">
+                <span>+</span>
+                <span>Add Sport</span>
+            </a>
+        </div>
+    </div>
+
+    {% if sports and sports|length > 0 %}
+        <!-- Search and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="sports-search" 
+                    class="search-input" 
+                    placeholder="Filter sports by name or description..." 
+                    aria-label="Filter sports"
+                    autocomplete="off"
+                >
+            </div>
+            <div>
+                <span class="badge-pill">
+                    <span>🏅</span>
+                    <span><strong>{{ sports|length }}</strong> Total Sport{% if sports|length != 1 %}s{% endif %}</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Sports Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="sports-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">ID</th>
+                            <th style="width: 200px;">Sport Name</th>
+                            <th>Description</th>
+                            <th style="width: 170px;">Associated Records</th>
+                            <th style="width: 130px;">Created</th>
+                            <th style="width: 140px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sport in sports %}
+                            <tr data-sport-name="{{ sport.name }}" data-sport-desc="{{ sport.description or '' }}">
+                                <td>
+                                    <span class="sport-date-cell">#{{ sport.id }}</span>
+                                </td>
+                                <td>
+                                    <span class="sport-name-cell">{{ sport.name }}</span>
+                                </td>
+                                <td>
+                                    <div class="sport-desc-cell">
+                                        {% if sport.description %}
+                                            {{ sport.description }}
+                                        {% else %}
+                                            <span style="color: var(--color-text-muted); font-style: italic;">No description provided</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                                        <span class="badge-pill" title="Teams in this sport">
+                                            🛡️ {{ sport.teams_count|default(0) }}
+                                        </span>
+                                        <span class="badge-pill" title="Players in this sport">
+                                            👤 {{ sport.players_count|default(0) }}
+                                        </span>
+                                        <span class="badge-pill" title="Tournaments in this sport">
+                                            🏆 {{ sport.tournaments_count|default(0) }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="sport-date-cell">
+                                        {{ sport.created_at.strftime('%Y-%m-%d') if sport.created_at else '—' }}
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="action-btn-group" style="justify-content: flex-end;">
+                                        <a 
+                                            href="{{ url_for('sports_edit', sport_id=sport.id) }}" 
+                                            class="btn btn-sm btn-edit" 
+                                            title="Edit {{ sport.name }}"
+                                            id="btn-edit-{{ sport.id }}"
+                                        >
+                                            Edit
+                                        </a>
+                                        <form 
+                                            method="POST" 
+                                            action="{{ url_for('sports_delete', sport_id=sport.id) }}" 
+                                            class="delete-sport-form" 
+                                            data-sport-name="{{ sport.name }}"
+                                            style="margin: 0;"
+                                        >
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button 
+                                                type="submit" 
+                                                class="btn btn-sm btn-delete" 
+                                                title="Delete {{ sport.name }}"
+                                                id="btn-delete-{{ sport.id }}"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr id="no-search-results" style="display: none;">
+                            <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+                                🔍 No sports match your search query.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏅</div>
+                <h2 class="empty-state-title">No Sports Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Your platform currently has no sports on file. Add your first sport to start organizing teams, rosters, and tournaments.
+                </p>
+                <a href="{{ url_for('sports_create') }}" class="btn btn-primary" id="btn-add-first-sport">
+                    <span>+</span>
+                    <span>Add First Sport</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

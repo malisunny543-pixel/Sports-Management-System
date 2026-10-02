@@ -1,0 +1,26 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Page Not Found — 404 Error{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 520px; text-align: center;">
+    <div class="auth-card">
+        <div style="font-size: 3.5rem; margin-bottom: var(--space-sm);">🔍</div>
+        <h1 class="auth-title" style="color: var(--color-accent-orange);">404 Not Found</h1>
+        <p class="auth-subtitle" style="margin-bottom: var(--space-xl);">
+            The resource, page, or record you requested could not be found.
+        </p>
+
+        <div style="display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('index') }}" class="btn btn-outline" id="btn-404-home">
+                Return to Home
+            </a>
+            {% if g.current_user and g.current_user.role == 'admin' %}
+                <a href="{{ url_for('sports_list') }}" class="btn btn-primary" id="btn-404-sports">
+                    Sports Management
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

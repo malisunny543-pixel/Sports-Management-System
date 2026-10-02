@@ -1,0 +1,36 @@
+# =============================================================================
+# requirements.txt
+# =============================================================================
+# This file lists every Python package needed to run the project.
+#
+# HOW TO USE:
+#   Anyone cloning this project runs: pip install -r requirements.txt
+#   That installs exactly these versions, ensuring everyone has the same setup.
+#
+# HOW IT WAS GENERATED:
+#   pip freeze > requirements.txt   (captures exact installed versions)
+#
+# PACKAGES EXPLAINED:
+#   Flask                 — The web framework itself
+#   Jinja2                — HTML templating engine (comes with Flask)
+#   Werkzeug              — WSGI utility library (Flask's foundation)
+#   click                 — Command-line interface toolkit (Flask uses it for `flask run`)
+#   itsdangerous          — Cryptographic signing for session security
+#   blinker               — Signal support for Flask extensions
+#   MarkupSafe            — Safely handles HTML/XML escaping in templates
+#   mysql-connector-python — Official MySQL driver; lets Python talk to MySQL
+#   python-dotenv         — Loads .env file into Python environment variables
+# =============================================================================
+
+blinker==1.9.0
+click==8.5.0
+Flask==3.1.3
+Flask-WTF==1.3.0
+gunicorn==26.2.0
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+mysql-connector-python==26.7.0
+python-dotenv==1.2.4
+Werkzeug==3.1.9
+wtforms==3.2.2

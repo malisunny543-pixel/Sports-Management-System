@@ -1,0 +1,183 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Teams Management — SportsPro{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>Teams Management</span>
+    </div>
+
+    <!-- Module Header -->
+    <div class="module-header">
+        <div>
+            <h1 class="module-title">Teams Management</h1>
+            <p class="module-subtitle">Register and oversee teams, sporting affiliations, and roster structures</p>
+        </div>
+        <div>
+            {% if sports and sports|length > 0 %}
+                <a href="{{ url_for('teams_create') }}" class="btn btn-primary" id="btn-add-team">
+                    <span>+</span>
+                    <span>Add Team</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('sports_create') }}" class="btn btn-outline" id="btn-add-sport-first">
+                    <span>🏅</span>
+                    <span>Register Sport First</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not sports or sports|length == 0 %}
+        <!-- Prerequisite Warning: No Sports Exist -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🏅</div>
+                <h2 class="empty-state-title">No Sports Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Every team must belong to a sport discipline. You must register at least one sport before adding teams to the platform.
+                </p>
+                <a href="{{ url_for('sports_create') }}" class="btn btn-primary" id="btn-create-first-sport">
+                    <span>+</span>
+                    <span>Go to Sports Management</span>
+                </a>
+            </div>
+        </div>
+    {% elif teams and teams|length > 0 %}
+        <!-- Search and Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="teams-search" 
+                    class="search-input" 
+                    placeholder="Search by team or sport name..." 
+                    aria-label="Filter teams"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
+                <div>
+                    <select id="sport-filter" class="filter-select" aria-label="Filter by sport">
+                        <option value="">All Sports</option>
+                        {% for sport in sports %}
+                            <option value="{{ sport.id }}">{{ sport.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <span class="badge-pill">
+                        <span>🛡️</span>
+                        <span><strong>{{ teams|length }}</strong> Total Team{% if teams|length != 1 %}s{% endif %}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teams Table Card -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="teams-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">ID</th>
+                            <th style="width: 240px;">Team Name</th>
+                            <th style="width: 200px;">Sport</th>
+                            <th style="width: 160px;">Assigned Players</th>
+                            <th style="width: 140px;">Created</th>
+                            <th style="width: 140px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                            <tr 
+                                data-team-name="{{ team.name }}" 
+                                data-sport-name="{{ team.sport_name }}" 
+                                data-sport-id="{{ team.sport_id }}"
+                            >
+                                <td>
+                                    <span class="sport-date-cell">#{{ team.id }}</span>
+                                </td>
+                                <td>
+                                    <span class="sport-name-cell">{{ team.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge-sport">
+                                        <span>🏅</span>
+                                        <span>{{ team.sport_name }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge-pill" title="Players currently registered in this team">
+                                        👤 <strong>{{ team.players_count|default(0) }}</strong> player{% if team.players_count != 1 %}s{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="sport-date-cell">
+                                        {{ team.created_at.strftime('%Y-%m-%d') if team.created_at else '—' }}
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="action-btn-group" style="justify-content: flex-end;">
+                                        <a 
+                                            href="{{ url_for('teams_edit', team_id=team.id) }}" 
+                                            class="btn btn-sm btn-edit" 
+                                            title="Edit {{ team.name }}"
+                                            id="btn-edit-team-{{ team.id }}"
+                                        >
+                                            Edit
+                                        </a>
+                                        <form 
+                                            method="POST" 
+                                            action="{{ url_for('teams_delete', team_id=team.id) }}" 
+                                            class="delete-team-form" 
+                                            data-team-name="{{ team.name }}"
+                                            style="margin: 0;"
+                                        >
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button 
+                                                type="submit" 
+                                                class="btn btn-sm btn-delete" 
+                                                title="Delete {{ team.name }}"
+                                                id="btn-delete-team-{{ team.id }}"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr id="no-team-search-results" style="display: none;">
+                            <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+                                🔍 No teams match your search or sport filter.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State (Sports exist, but no teams yet) -->
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="empty-state-icon">🛡️</div>
+                <h2 class="empty-state-title">No Teams Registered Yet</h2>
+                <p class="empty-state-desc">
+                    Get started by creating your first team and associating it with an existing sport discipline.
+                </p>
+                <a href="{{ url_for('teams_create') }}" class="btn btn-primary" id="btn-add-first-team">
+                    <span>+</span>
+                    <span>Add First Team</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "layout/base.html" %}
+
+{% block title %}SportsPro — Sports Management & Tournament Operations Platform{% endblock %}
+
+{% block content %}
+<div class="homepage-wrapper">
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero-section" style="min-height: auto; padding: 4.5rem var(--space-xl) var(--space-2xl);">
+        <!-- Animated glowing orbs for visual depth -->
+        <div class="bg-orb orb-1" aria-hidden="true"></div>
+        <div class="bg-orb orb-2" aria-hidden="true"></div>
+        <div class="bg-orb orb-3" aria-hidden="true"></div>
+
+        <div class="hero-content" style="max-width: 860px; margin: 0 auto; text-align: center;">
+            <!-- Badge / Platform Tagline -->
+            <div class="badge" id="platform-badge" style="margin-bottom: var(--space-md);">
+                <span class="badge-dot"></span>
+                <span>🏆 Complete Sports League &amp; Tournament Operations Platform</span>
+            </div>
+
+            <!-- Main Heading -->
+            <h1 class="hero-title" id="main-heading" style="margin-bottom: var(--space-md);">
+                Next-Generation Sports Management for
+                <span class="title-accent">Modern Leagues</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="hero-description" style="font-size: 1.15rem; max-width: 720px; margin: 0 auto var(--space-xl); color: var(--color-text-secondary); line-height: 1.7;">
+                Streamline sporting disciplines, coordinate tournament schedules, compute dynamic standings, record live match results, and empower athletes with dedicated self-service performance portals.
+            </p>
+
+            <!-- Call-to-Action Buttons -->
+            <div style="display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-2xl);">
+                {% if g.current_user %}
+                    {% if g.current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary" id="btn-hero-admin" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                            <span>⚙️ Open Admin Console &rarr;</span>
+                        </a>
+                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline" id="btn-hero-reports" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                            <span>📈 Analytics &amp; Reports</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('player_dashboard') }}" class="btn btn-primary" id="btn-hero-player" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                            <span>📊 Go to My Player Portal &rarr;</span>
+                        </a>
+                        <a href="{{ url_for('player_profile') }}" class="btn btn-outline" id="btn-hero-profile" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                            <span>👤 View Profile</span>
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" id="btn-hero-signup" style="padding: 0.75rem 1.8rem; font-size: 1rem;">
+                        <span>Join as Player (Sign Up) &rarr;</span>
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline" id="btn-hero-signin" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                        <span>Sign In to SportsPro &rarr;</span>
+                    </a>
+                    <a href="#features-section" class="btn btn-outline" id="btn-hero-explore" style="padding: 0.75rem 1.6rem; font-size: 1rem;">
+                        <span>Explore Capabilities &darr;</span>
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Live Platform Metrics Bar -->
+            <div class="stats-overview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-md); text-align: center; margin-top: var(--space-lg);">
+                <div class="table-card" style="padding: var(--space-md) var(--space-sm); border-top: 3px solid var(--color-accent-primary);">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent-primary); font-family: var(--font-heading);" id="metric-sports-count">
+                        {{ stats.sports_count }}
+                    </div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; letter-spacing: 0.05em; margin-top: 0.2rem;">
+                        🏅 Sports
+                    </div>
+                </div>
+
+                <div class="table-card" style="padding: var(--space-md) var(--space-sm); border-top: 3px solid var(--color-accent-purple);">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #a594fd; font-family: var(--font-heading);" id="metric-tournaments-count">
+                        {{ stats.tournaments_count }}
+                    </div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; letter-spacing: 0.05em; margin-top: 0.2rem;">
+                        🏆 Tournaments
+                    </div>
+                </div>
+
+                <div class="table-card" style="padding: var(--space-md) var(--space-sm); border-top: 3px solid var(--color-accent-orange);">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent-orange); font-family: var(--font-heading);" id="metric-teams-count">
+                        {{ stats.teams_count }}
+                    </div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; letter-spacing: 0.05em; margin-top: 0.2rem;">
+                        🛡️ Active Teams
+                    </div>
+                </div>
+
+                <div class="table-card" style="padding: var(--space-md) var(--space-sm); border-top: 3px solid #00b4d8;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #48cae4; font-family: var(--font-heading);" id="metric-players-count">
+                        {{ stats.players_count }}
+                    </div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; letter-spacing: 0.05em; margin-top: 0.2rem;">
+                        👥 Athletes
+                    </div>
+                </div>
+
+                <div class="table-card" style="padding: var(--space-md) var(--space-sm); border-top: 3px solid #ffaa00;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #ffaa00; font-family: var(--font-heading);" id="metric-matches-count">
+                        {{ stats.matches_count }}
+                    </div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; letter-spacing: 0.05em; margin-top: 0.2rem;">
+                        ⚔️ Matches Played
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Capabilities Section -->
+    <section id="features-section" style="max-width: 1100px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl);">
+        <div style="text-align: center; margin-bottom: var(--space-2xl);">
+            <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                Complete Sports Management Ecosystem
+            </h2>
+            <p style="color: var(--color-text-secondary); font-size: 1rem; max-width: 620px; margin: 0 auto;">
+                Every tool needed to orchestrate competitive sports competitions, from registration to final leaderboards.
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: var(--space-lg);">
+            <!-- Feature 1 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🏆</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Tournament &amp; Match Scheduling
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Schedule multi-stage competitions, assign match venues, configure start/end windows, and manage match states from scheduled through completed.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    Automated Fixture Tracking &bull; Multi-Sport
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📊</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Automated Standings &amp; Points Tables
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Dynamic league tables computed directly from verified match results with regulation wins, ordinary draws, tie-break outcomes, and goal difference rankings.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    3-1-0 Point Engine &bull; Instant Updates
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🛡️</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Teams &amp; Roster Management
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Create club rosters, designate player jersey numbers, and manage team affiliations across single or multiple sporting disciplines.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    Full Roster Controls &bull; Squad Depth
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">👤</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Player Self-Service Portal
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Athletes log in to view personal schedules, squad fixtures, match outcomes, individual performance statistics (goals, assists, points), and account details.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    Dedicated Athlete Hub &bull; Stat Summaries
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📈</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Analytics &amp; CSV Exports
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Executive KPI summaries, tournament participation breakdowns, team rosters, and one-click RFC 4180 CSV exports secured against spreadsheet formula injection.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    Formula Injection Guard &bull; Executive KPIs
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="dashboard-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🔒</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                        Enterprise Governance &amp; RBAC
+                    </h3>
+                    <p style="color: var(--color-text-secondary); font-size: 0.92rem; line-height: 1.6;">
+                        Role-based access controls for Administrators and Players, CSRF protection, session fixation defense, parameterized SQL, and account lifecycle management.
+                    </p>
+                </div>
+                <div style="margin-top: var(--space-md); font-size: 0.82rem; color: var(--color-accent-primary); font-weight: 600;">
+                    Role-Based Access &bull; CSRF Protected
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operational Workflow Section -->
+    <section style="max-width: 1100px; margin: 0 auto var(--space-3xl); padding: 0 var(--space-xl);">
+        <div class="table-card" style="padding: var(--space-2xl) var(--space-xl);">
+            <div style="text-align: center; margin-bottom: var(--space-xl);">
+                <span class="badge-sport" style="margin-bottom: var(--space-xs);">How It Works</span>
+                <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--color-text-primary); margin: var(--space-xs) 0 0 0;">
+                    Seamless League Operations Workflow
+                </h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-lg);">
+                <div style="padding: var(--space-md); border-left: 3px solid var(--color-accent-primary);">
+                    <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--color-accent-primary); font-weight: 700; margin-bottom: 0.3rem;">
+                        STEP 01
+                    </div>
+                    <h4 style="font-size: 1.05rem; color: var(--color-text-primary); margin: 0 0 0.3rem 0;">
+                        League Setup
+                    </h4>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
+                        Admins define sports disciplines, configure clubs &amp; teams, and schedule tournament competitions.
+                    </p>
+                </div>
+
+                <div style="padding: var(--space-md); border-left: 3px solid var(--color-accent-purple);">
+                    <div style="font-family: var(--font-mono); font-size: 0.85rem; color: #a594fd; font-weight: 700; margin-bottom: 0.3rem;">
+                        STEP 02
+                    </div>
+                    <h4 style="font-size: 1.05rem; color: var(--color-text-primary); margin: 0 0 0.3rem 0;">
+                        Roster &amp; User Linking
+                    </h4>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
+                        Athletes are enrolled into team rosters. User accounts are created and linked to athlete profiles for dashboard access.
+                    </p>
+                </div>
+
+                <div style="padding: var(--space-md); border-left: 3px solid var(--color-accent-orange);">
+                    <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--color-accent-orange); font-weight: 700; margin-bottom: 0.3rem;">
+                        STEP 03
+                    </div>
+                    <h4 style="font-size: 1.05rem; color: var(--color-text-primary); margin: 0 0 0.3rem 0;">
+                        Match Scoring
+                    </h4>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
+                        Officials record match scores, tie-breakers, and individual player metrics (goals, assists, points) upon game completion.
+                    </p>
+                </div>
+
+                <div style="padding: var(--space-md); border-left: 3px solid #00b4d8;">
+                    <div style="font-family: var(--font-mono); font-size: 0.85rem; color: #48cae4; font-weight: 700; margin-bottom: 0.3rem;">
+                        STEP 04
+                    </div>
+                    <h4 style="font-size: 1.05rem; color: var(--color-text-primary); margin: 0 0 0.3rem 0;">
+                        Automated Analytics
+                    </h4>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5;">
+                        League standings, goal differential, player leaderboards, and CSV exports update dynamically in real time.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Access Guidance Card -->
+            <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: var(--color-bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+                <div>
+                    <h4 style="font-size: 1rem; color: var(--color-text-primary); margin: 0 0 0.2rem 0;">
+                        🔐 Account Access &amp; Athlete Onboarding
+                    </h4>
+                    <p style="font-size: 0.88rem; color: var(--color-text-secondary); margin: 0; max-width: 680px;">
+                        SportsPro empowers players with self-service registration. Create your player account to access your personalized portal, inspect match fixtures, and track athletic progress.
+                    </p>
+                </div>
+                <div style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('register') }}" class="btn btn-outline" id="btn-bottom-signup">
+                        Sign Up
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" id="btn-bottom-signin">
+                        Sign In Now &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

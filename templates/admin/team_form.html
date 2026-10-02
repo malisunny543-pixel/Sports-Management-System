@@ -1,0 +1,109 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+    {% if action == 'edit' %}Edit Team: {{ team.name }}{% else %}Add New Team{% endif %} — SportsPro
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="max-width: 680px;">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('teams_list') }}">Teams Management</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>{% if action == 'edit' %}Edit Team{% else %}Add Team{% endif %}</span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="module-header" style="margin-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md);">
+            <div>
+                <h1 class="module-title" style="font-size: 1.6rem;">
+                    {% if action == 'edit' %}
+                        Edit Team: <span style="color: var(--color-accent-primary);">{{ team.name }}</span>
+                    {% else %}
+                        Register New Team
+                    {% endif %}
+                </h1>
+                <p class="module-subtitle">
+                    {% if action == 'edit' %}
+                        Update the team's identity or sporting affiliation.
+                    {% else %}
+                        Define a competing team and link it to an active sport category.
+                    {% endif %}
+                </p>
+            </div>
+            {% if action == 'edit' and team.id %}
+                <div>
+                    <span class="badge-pill">ID #{{ team.id }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <form 
+            method="POST" 
+            action="{% if action == 'edit' %}{{ url_for('teams_edit', team_id=team.id) }}{% else %}{{ url_for('teams_create') }}{% endif %}"
+            id="team-form"
+            novalidate
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Team Name -->
+            <div class="form-group">
+                <label for="name" class="form-label">
+                    Team Name <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-input" 
+                    value="{{ name if name is defined else (team.name if team else '') }}" 
+                    maxlength="100" 
+                    placeholder="e.g. Manchester United, Los Angeles Lakers, Mumbai Indians"
+                    required
+                    autocomplete="off"
+                    autofocus
+                >
+                <div class="char-counter">
+                    <span>Required &bull; Max 100 characters</span>
+                </div>
+            </div>
+
+            <!-- Sport Selection -->
+            <div class="form-group">
+                <label for="sport_id" class="form-label">
+                    Sport Category <span style="color: var(--color-accent-orange); font-weight: bold;">*</span>
+                </label>
+                {% set current_sport = selected_sport_id if selected_sport_id is defined else (team.sport_id if team else '') %}
+                <select id="sport_id" name="sport_id" class="form-input" required>
+                    <option value="">-- Select a Sport Category --</option>
+                    {% for sport in sports %}
+                        <option 
+                            value="{{ sport.id }}" 
+                            {% if current_sport|string == sport.id|string %}selected{% endif %}
+                        >
+                            {{ sport.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="char-counter">
+                    <span>Each team competes within a designated sport</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('teams_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-save-team">
+                    <span>💾</span>
+                    <span>{% if action == 'edit' %}Save Changes{% else %}Create Team{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

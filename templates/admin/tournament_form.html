@@ -1,0 +1,179 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+    {% if action == 'add' %}
+        Add Tournament — SportsPro
+    {% else %}
+        Edit Tournament: {{ tournament.name }} — SportsPro
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <a href="{{ url_for('tournaments_list') }}">Tournaments</a>
+        <span class="breadcrumb-separator">&rsaquo;</span>
+        <span>{% if action == 'add' %}Add Tournament{% else %}Edit: {{ tournament.name }}{% endif %}</span>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">
+                {% if action == 'add' %}
+                    🏆 Create New Tournament
+                {% else %}
+                    ✏️ Edit Tournament Details
+                {% endif %}
+            </h1>
+            <p class="form-subtitle">
+                {% if action == 'add' %}
+                    Define a sporting tournament, competition timeframe, and current status
+                {% else %}
+                    Modify tournament settings, dates, or active status
+                {% endif %}
+            </p>
+        </div>
+
+        <form 
+            method="POST" 
+            action="{% if action == 'add' %}{{ url_for('tournaments_create') }}{% else %}{{ url_for('tournaments_edit', tournament_id=tournament.id) }}{% endif %}"
+            id="tournament-form"
+            novalidate
+        >
+            <!-- CSRF Protection Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Row 1: Tournament Name & Sport Category -->
+            <div class="form-row">
+                <!-- Tournament Name -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tournament_name" class="form-label">
+                        Tournament Name <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="tournament_name" 
+                        name="name" 
+                        class="form-input" 
+                        placeholder="e.g. Champions League 2026, Summer Cup"
+                        value="{% if name is defined %}{{ name }}{% elif tournament is defined %}{{ tournament.name }}{% endif %}"
+                        maxlength="150"
+                        required
+                        {% if action == 'add' %}autofocus{% endif %}
+                    >
+                    <div class="char-counter">
+                        <span>Max 150 characters</span>
+                    </div>
+                </div>
+
+                <!-- Sport Category -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tournament_sport_id" class="form-label">
+                        Sport Category <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <select id="tournament_sport_id" name="sport_id" class="form-input" required>
+                        <option value="">-- Select Sport Discipline --</option>
+                        {% for sport in sports %}
+                            <option 
+                                value="{{ sport.id }}" 
+                                {% if selected_sport_id is defined and selected_sport_id|string == sport.id|string %}
+                                    selected
+                                {% elif tournament is defined and tournament.sport_id|string == sport.id|string %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ sport.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 2: Event Window (Start Date & End Date) -->
+            <div class="form-row">
+                <!-- Start Date -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tournament_start_date" class="form-label">
+                        Start Date <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <input 
+                        type="date" 
+                        id="tournament_start_date" 
+                        name="start_date" 
+                        class="form-input" 
+                        value="{% if start_date is defined %}{{ start_date }}{% elif tournament is defined %}{{ tournament.start_date }}{% endif %}"
+                        required
+                    >
+                    <div class="char-counter">
+                        <span>Tournament opening day (YYYY-MM-DD)</span>
+                    </div>
+                </div>
+
+                <!-- End Date -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tournament_end_date" class="form-label">
+                        End Date <span style="color: var(--color-accent-danger);">*</span>
+                    </label>
+                    <input 
+                        type="date" 
+                        id="tournament_end_date" 
+                        name="end_date" 
+                        class="form-input" 
+                        value="{% if end_date is defined %}{{ end_date }}{% elif tournament is defined %}{{ tournament.end_date }}{% endif %}"
+                        required
+                    >
+                    <div class="char-counter">
+                        <span>Must be on or after start date</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Status -->
+            <div class="form-group">
+                <label for="tournament_status" class="form-label">
+                    Tournament Status <span style="color: var(--color-accent-danger);">*</span>
+                </label>
+                <select id="tournament_status" name="status" class="form-input" required>
+                    {% set current_status = status if status is defined else (tournament.status if tournament is defined else 'upcoming') %}
+                    <option value="upcoming" {% if current_status == 'upcoming' %}selected{% endif %}>⏳ Upcoming</option>
+                    <option value="ongoing" {% if current_status == 'ongoing' %}selected{% endif %}>🔥 Ongoing</option>
+                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>✅ Completed</option>
+                    <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                </select>
+                <div class="char-counter">
+                    <span>Current lifecycle state of the championship</span>
+                </div>
+            </div>
+
+            <!-- Row 4: Description -->
+            <div class="form-group">
+                <label for="tournament_description" class="form-label">
+                    Tournament Description <span style="color: var(--color-text-muted); font-size: 0.8rem;">(Optional)</span>
+                </label>
+                <textarea 
+                    id="tournament_description" 
+                    name="description" 
+                    class="form-textarea" 
+                    rows="4" 
+                    placeholder="Enter competition details, format, prize structure, or notes..."
+                >{% if description is defined %}{{ description }}{% elif tournament is defined %}{{ tournament.description or '' }}{% endif %}</textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <a href="{{ url_for('tournaments_list') }}" class="btn btn-outline" id="btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-save-tournament">
+                    <span>💾</span>
+                    <span>{% if action == 'add' %}Create Tournament{% else %}Update Tournament{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
